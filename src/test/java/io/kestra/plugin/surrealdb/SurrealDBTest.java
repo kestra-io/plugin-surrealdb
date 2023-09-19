@@ -5,9 +5,7 @@ import io.kestra.core.models.tasks.Task;
 public class SurrealDBTest extends Task implements SurrealDBConnectionInterface {
 	protected static final String USER = "Administrator";
 	protected static final String PASSWORD = "password";
-	protected static final String TABLE = "testable_15";
-	protected static final String SCOPE = "testscope_";
-	protected static final String COLLECTION = "testcollection_";
+	protected static final String TABLE = "testtable_";
 	protected static final String NAMESPACE = "some-namespace";
 	protected static final String DATABASE = "some-database";
 	protected static final String HOST = "127.0.0.1";
