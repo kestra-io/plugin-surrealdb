@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,12 +34,21 @@ public class QueryTest extends SurrealDBTest {
 	void simpleQuery_AllTypesParsed() throws Exception {
 		RunContext runContext = runContextFactory.of();
 
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("name", "Kestra Doc");
+		parameters.put("nullable", null);
+		parameters.put("bool", String.valueOf(true));
+		parameters.put("int", String.valueOf(3));
+		parameters.put("dec", String.valueOf(3.10));
+		parameters.put("bigdec", String.valueOf(3000));
+		parameters.put("date", String.valueOf(LocalDateTime.of(2006, 1, 2, 15, 4, 5, 5_670_000_00).atOffset(ZoneOffset.of("+8"))));
+
 		String id = UUID.randomUUID().toString().toLowerCase().replace("-", "");
 		authentifiedQueryBuilder()
 				.query("""
       CREATE %s:%s 
-      SET c_string = 'Kestra Doc', c_null = NULL, c_boolean = true, 
-      c_int = 3, c_decimal = 3.10, c_decimal_e_notation = 3000, 
+      SET c_string = $name, c_null = $nullable, c_boolean = <bool> $bool, 
+      c_int = <int> $int, c_decimal = <number> $dec, c_decimal_e_notation = <number> $bigdec, 
       c_number_array = [3, 3.10, 3000], c_string_array = ['firstString', 'secondString'],
 			c_object = [
 			{
@@ -48,9 +59,10 @@ public class QueryTest extends SurrealDBTest {
 		      }
 			        ]
       }],
-      c_date = '2006-01-02T15:04:05.567+08:00'
+      c_date = <datetime> $date
       """.formatted(TABLE, id))
 				.fetchType(FetchType.FETCH_ONE)
+				.parameters(parameters)
 				.build().run(runContext);
 
 		Query query = authentifiedQueryBuilder()
@@ -93,14 +105,19 @@ public class QueryTest extends SurrealDBTest {
 	void simpleQuery_WorksWithId() throws Exception {
 		RunContext runContext = runContextFactory.of();
 
+		Map<String, String> parameters = Map.of("name", "A collection doc");
+
 		String id = UUID.randomUUID().toString().toLowerCase().replace("-", "");
+
 		authentifiedQueryBuilder()
-				.query("CREATE %s:%s SET c_string='A collection doc'".formatted(TABLE, id))
+				.query("CREATE %s:%s SET c_string=$name".formatted(TABLE, id))
+				.parameters(parameters)
 				.fetchType(FetchType.FETCH_ONE)
 				.build().run(runContext);
 
 		Query query = authentifiedQueryBuilder()
-				.query("SELECT * FROM %s:%s WHERE c_string='A collection doc'".formatted(TABLE, id))
+				.query("SELECT * FROM %s:%s WHERE c_string=$name".formatted(TABLE, id))
+				.parameters(parameters)
 				.fetchType(FetchType.FETCH_ONE)
 				.build();
 
@@ -121,18 +138,21 @@ public class QueryTest extends SurrealDBTest {
 
 	@ParameterizedTest
 	@CsvSource(value = {
-			"Kestra Doc;3;{\"c_string\":\"Kestra Doc\",\"c_int\":3}",
-			"Kestra Doc;3;{\"c_int\":3,\"c_string\":\"Kestra Doc\"}"
+			"$name;$age;{\"name\":\"Kestra Doc\",\"age\":3}",
+			"$name;$age;{\"age\":3,\"name\":\"Kestra Doc\"}"
 	}, delimiter = ';')
 	void preparedStatement(String firstArg, String secondArg, String parametersJson) throws Exception {
 		RunContext runContext = runContextFactory.of();
 
 		String id = UUID.randomUUID().toString().toLowerCase().replace("-", "");
+		Map<String, Object> parameters = JacksonMapper.toMap(parametersJson);
+
 		authentifiedQueryBuilder()
 				.query("""
       CREATE %s:%s 
-      SET c_string = 'Kestra Doc', c_int = 3
-      """.formatted(TABLE, id))
+      SET c_string = %s, c_int = <int> %s
+      """.formatted(TABLE, id, firstArg, secondArg))
+				.parameters(parameters)
 				.fetchType(FetchType.FETCH_ONE)
 				.build().run(runContext);
 
@@ -140,10 +160,10 @@ public class QueryTest extends SurrealDBTest {
 				.query("""
 				       SELECT c_string, c_int
 				       FROM %s
-				       WHERE c_string = '%s' AND c_int = %s
+				       WHERE c_string = %s AND c_int = <int> %s
 				       """.formatted(TABLE, firstArg, secondArg))
 				.fetchType(FetchType.FETCH_ONE)
-				.parameters(JacksonMapper.toMap(parametersJson))
+				.parameters(parameters)
 				.build();
 
 		Query.Output queryResult = query.run(runContext);
@@ -166,27 +186,32 @@ public class QueryTest extends SurrealDBTest {
 	void simpleQuery_FetchAll() throws Exception {
 		RunContext runContext = runContextFactory.of();
 
+		Map<String, String> parameters = Map.of("name", "Kestra Doc");
+
 		String firstId = UUID.randomUUID().toString().toLowerCase().replace("-", "");
 		String secondId = UUID.randomUUID().toString().toLowerCase().replace("-", "");
 
 		authentifiedQueryBuilder()
 				.query("""
       CREATE %s:%s 
-      SET c_string = 'Kestra Doc'
+      SET c_string = $name
       """.formatted(TABLE, firstId))
+				.parameters(parameters)
 				.fetchType(FetchType.FETCH_ONE)
 				.build().run(runContext);
 		authentifiedQueryBuilder()
 				.query("""
       CREATE %s:%s 
-      SET c_string = 'Kestra Doc'
+      SET c_string = $name
       """.formatted(TABLE, secondId))
+				.parameters(parameters)
 				.fetchType(FetchType.FETCH_ONE)
 				.build().run(runContext);
 
 		Query.Output updateQuery = authentifiedQueryBuilder()
 				.query("""
-			      UPDATE %s:%s SET c_string = 'Another Kestra Doc' RETURN *""".formatted(TABLE, secondId))
+			      UPDATE %s:%s SET c_string = $name RETURN *""".formatted(TABLE, secondId))
+				.parameters(Map.of("name", "Another Kestra Doc"))
 				.fetchType(FetchType.NONE)
 				.build().run(runContext);
 
@@ -202,8 +227,14 @@ public class QueryTest extends SurrealDBTest {
 
 		assertThat(queryResult.getSize(), is(2L));
 
-		List<Map<Object, Object>> rows = queryResult.getRows().stream().flatMap(objectQueryResult -> objectQueryResult.getResult().stream()).map(object -> (Map<Object, Object>) object).toList();
-		List<Object> objects = queryResult.getRows().stream().flatMap(objectQueryResult -> objectQueryResult.getResult().stream()).toList();
+		List<Map<Object, Object>> rows = queryResult.getRows().stream()
+				.flatMap(objectQueryResult -> objectQueryResult.getResult().stream())
+				.map(object -> (Map<Object, Object>) object).toList();
+
+		List<Object> objects = queryResult.getRows().stream()
+				.flatMap(objectQueryResult -> objectQueryResult.getResult().stream())
+				.toList();
+
 		assertThat(objects, hasSize(2));
 		assertThat(rows, Matchers.hasItems(
 				hasEntry("c_string", "Kestra Doc"),
@@ -219,7 +250,10 @@ public class QueryTest extends SurrealDBTest {
 
 		assertThat(queryResult.getSize(), is(2L));
 
-		rows = queryResult.getRows().stream().flatMap(objectQueryResult -> objectQueryResult.getResult().stream()).map(object -> (Map<Object, Object>) object).toList();
+		rows = queryResult.getRows().stream()
+				.flatMap(objectQueryResult -> objectQueryResult.getResult().stream())
+				.map(object -> (Map<Object, Object>) object).toList();
+
 		assertThat(rows, hasSize(2));
 		assertThat(rows, Matchers.hasItems(
 				hasEntry("c_string", "Kestra Doc"),
@@ -245,14 +279,18 @@ public class QueryTest extends SurrealDBTest {
 	void simpleQuery_ToInternalStorage() throws Exception {
 		RunContext runContext = runContextFactory.of();
 
+		Map<String, String> parameters = Map.of("name", "A collection doc");
+
 		String id = UUID.randomUUID().toString().toLowerCase().replace("-", "");
 		authentifiedQueryBuilder()
-				.query("CREATE %s:%s SET c_string='A collection doc'".formatted(TABLE, id))
+				.query("CREATE %s:%s SET c_string=$name".formatted(TABLE, id))
+				.parameters(parameters)
 				.fetchType(FetchType.STORE)
 				.build().run(runContext);
 
 		Query query = authentifiedQueryBuilder()
-				.query("SELECT * FROM %s WHERE c_string='A collection doc'".formatted(TABLE))
+				.query("SELECT * FROM %s WHERE c_string=$name".formatted(TABLE))
+				.parameters(parameters)
 				.fetchType(FetchType.STORE)
 				.build();
 

@@ -2,21 +2,16 @@ package io.kestra.plugin.surrealdb;
 
 import com.surrealdb.connection.SurrealConnection;
 import com.surrealdb.connection.SurrealWebSocketConnection;
-import com.surrealdb.driver.AsyncSurrealDriver;
 import com.surrealdb.driver.SyncSurrealDriver;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
-import java.util.concurrent.CompletableFuture;
 
 @SuperBuilder
 @ToString
@@ -25,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 @NoArgsConstructor
 public class SurrealDBConnection extends Task implements SurrealDBConnectionInterface {
 
+	@Builder.Default
 	private boolean useTls = false;
 
 	@NotNull
@@ -78,5 +74,4 @@ public class SurrealDBConnection extends Task implements SurrealDBConnectionInte
 	private void signIn(SyncSurrealDriver driver, RunContext context) throws IllegalVariableEvaluationException {
 		driver.signIn(context.render(username), context.render(password));
 	}
-
 }

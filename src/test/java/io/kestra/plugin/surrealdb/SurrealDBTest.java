@@ -1,8 +1,6 @@
 package io.kestra.plugin.surrealdb;
 
-import io.kestra.core.models.tasks.Task;
-
-public class SurrealDBTest extends Task implements SurrealDBConnectionInterface {
+public class SurrealDBTest {
 	protected static final String USER = "Administrator";
 	protected static final String PASSWORD = "password";
 	protected static final String TABLE = "testtable_";
