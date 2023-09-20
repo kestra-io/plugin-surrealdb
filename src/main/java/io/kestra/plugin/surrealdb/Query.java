@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @SuperBuilder
 @ToString
@@ -27,22 +28,22 @@ import java.util.Map;
 @NoArgsConstructor
 @Schema(title = "Query a Surreal database with SurrealQL.")
 @Plugin(
-		examples = {
-				@Example(
-						title = "Send a SurrealQL query to a Surreal database",
-						code = {
-								"useTls: true",
-								"port: 8000",
-								"host: localhost",
-								"username: surreal_user",
-								"password: surreal_passwd",
-								"database: surreal_db",
-								"namespace: surreal_namespace",
-								"query: SELECT * FROM SURREAL_TABLE",
-								"fetchType: STORE"
-						}
-				)
-		}
+	examples = {
+		@Example(
+			title = "Send a SurrealQL query to a Surreal database",
+			code = {
+				"useTls: true",
+				"port: 8000",
+				"host: localhost",
+				"username: surreal_user",
+				"password: surreal_passwd",
+				"database: surreal_db",
+				"namespace: surreal_namespace",
+				"query: SELECT * FROM SURREAL_TABLE",
+				"fetchType: STORE"
+			}
+		)
+	}
 )
 public class Query extends SurrealDBConnection implements RunnableTask<Query.Output>, QueryInterface {
 
@@ -66,20 +67,26 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 		List<QueryResult<Object>> results = driver.query(renderedQuery, parameters, Object.class);
 
 		Query.Output.OutputBuilder outputBuilder = Output.builder().size(results.stream()
-				.mapToLong(result -> (long) result.getResult().size())
-				.sum());
+			.mapToLong(result -> (long) result.getResult().size())
+			.sum());
 
 		super.disconnect();
 
 		return (switch (fetchType) {
-					case FETCH -> outputBuilder.rows(results);
-					case FETCH_ONE -> outputBuilder.row(results.stream().findFirst().orElse(null));
-					case STORE -> outputBuilder.uri(getTempFile(runContext, results));
-					default -> outputBuilder;
-				}).build();
+			case FETCH -> outputBuilder.rows(getResultStream(results).toList());
+			case FETCH_ONE -> outputBuilder.row(getResultStream(results).findFirst().orElse(null));
+			case STORE -> outputBuilder.uri(getTempFile(runContext, getResultStream(results).toList()));
+			default -> outputBuilder;
+		}).build();
 	}
 
-	private static URI getTempFile(RunContext runContext, List<QueryResult<Object>> results) throws IOException {
+	private static Stream<Map<String, Object>> getResultStream(List<QueryResult<Object>> results) {
+		return results.stream()
+			.map(QueryResult::getResult)
+			.flatMap(list -> list.stream().map(object -> (Map<String, Object>) object));
+	}
+
+	private static URI getTempFile(RunContext runContext, List<Map<String, Object>> results) throws IOException {
 		File tempFile = runContext.tempFile(".ion").toFile();
 		BufferedWriter fileWriter = new BufferedWriter(new FileWriter(tempFile));
 		try (OutputStream outputStream = new FileOutputStream(tempFile)) {
@@ -95,25 +102,25 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 	@Getter
 	public static class Output implements io.kestra.core.models.tasks.Output {
 		@Schema(
-				title = "List containing the fetched data",
-				description = "Only populated if using `FETCH`."
+			title = "List containing the fetched data",
+			description = "Only populated if using `FETCH`."
 		)
-		private List<QueryResult<Object>> rows;
+		private List<Map<String, Object>> rows;
 
 		@Schema(
-				title = "Map containing the first row of fetched data",
-				description = "Only populated if using `FETCH_ONE`."
+			title = "Map containing the first row of fetched data",
+			description = "Only populated if using `FETCH_ONE`."
 		)
-		private QueryResult<Object> row;
+		private Map<String, Object> row;
 
 		@Schema(
-				title = "The uri of the stored result",
-				description = "Only populated if using `STORE`"
+			title = "The uri of the stored result",
+			description = "Only populated if using `STORE`"
 		)
 		private URI uri;
 
 		@Schema(
-				title = "The amount of rows fetched"
+			title = "The amount of rows fetched"
 		)
 		private Long size;
 	}

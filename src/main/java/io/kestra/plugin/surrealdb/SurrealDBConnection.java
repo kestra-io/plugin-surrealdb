@@ -23,9 +23,9 @@ public class SurrealDBConnection extends Task implements SurrealDBConnectionInte
 	@Builder.Default
 	private boolean useTls = false;
 
-	@NotNull
 	@Positive
-	private int port;
+	@Builder.Default
+	private int port = 8000;
 
 	@NotNull
 	@NotBlank
@@ -47,11 +47,15 @@ public class SurrealDBConnection extends Task implements SurrealDBConnectionInte
 	@NotBlank
 	private String database;
 
+	@Positive
+	@Builder.Default
+	private int connectionTimeout = 60;
+
 	private SurrealConnection connection;
 
 	protected SyncSurrealDriver connect(RunContext context) throws IllegalVariableEvaluationException {
-		SurrealWebSocketConnection connection = new SurrealWebSocketConnection(host, port, useTls);
-		connection.connect(500);
+		SurrealWebSocketConnection connection = new SurrealWebSocketConnection(context.render(host), port, useTls);
+		connection.connect(connectionTimeout);
 
 		SyncSurrealDriver driver = new SyncSurrealDriver(connection);
 
