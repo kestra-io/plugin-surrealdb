@@ -40,14 +40,12 @@ public interface SurrealDBConnectionInterface {
 		title = "Plaintext authentication username"
 	)
 	@PluginProperty(dynamic = true)
-	@NotBlank
 	String getUsername();
 
 	@Schema(
 		title = "Plaintext authentication password"
 	)
 	@PluginProperty(dynamic = true)
-	@NotBlank
 	String getPassword();
 
 	@Schema(

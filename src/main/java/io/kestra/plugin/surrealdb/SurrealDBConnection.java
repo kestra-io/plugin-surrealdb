@@ -71,6 +71,8 @@ public class SurrealDBConnection extends Task implements SurrealDBConnectionInte
 	}
 
 	private void signIn(SyncSurrealDriver driver, RunContext context) throws IllegalVariableEvaluationException {
-		driver.signIn(context.render(username), context.render(password));
+		if (username != null && password != null) {
+			driver.signIn(context.render(username), context.render(password));
+		}
 	}
 }
