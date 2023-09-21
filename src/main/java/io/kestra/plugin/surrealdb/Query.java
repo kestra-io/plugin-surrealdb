@@ -26,11 +26,11 @@ import java.util.stream.Stream;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Query a Surreal database with SurrealQL.")
+@Schema(title = "Query a SurrealDB database with SurrealQL.")
 @Plugin(
 	examples = {
 		@Example(
-			title = "Send a SurrealQL query to a Surreal database",
+			title = "Send a SurrealQL query to a SurrealDB database",
 			code = {
 				"useTls: true",
 				"port: 8000",
@@ -54,7 +54,6 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 	@Builder.Default
 	protected Map<String, String> parameters = new HashMap<>();
 
-	@NotNull
 	@NotBlank
 	protected String query;
 
@@ -80,21 +79,20 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 		}).build();
 	}
 
-	private static Stream<Map<String, Object>> getResultStream(List<QueryResult<Object>> results) {
+	private Stream<Map<String, Object>> getResultStream(List<QueryResult<Object>> results) {
 		return results.stream()
 			.map(QueryResult::getResult)
 			.flatMap(list -> list.stream().map(object -> (Map<String, Object>) object));
 	}
 
-	private static URI getTempFile(RunContext runContext, List<Map<String, Object>> results) throws IOException {
+	private URI getTempFile(RunContext runContext, List<Map<String, Object>> results) throws IOException {
 		File tempFile = runContext.tempFile(".ion").toFile();
-		BufferedWriter fileWriter = new BufferedWriter(new FileWriter(tempFile));
-		try (OutputStream outputStream = new FileOutputStream(tempFile)) {
+		try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter(tempFile))) {
+			OutputStream outputStream = new FileOutputStream(tempFile);
 			FileSerde.write(outputStream, results);
+			fileWriter.flush();
 		}
 
-		fileWriter.flush();
-		fileWriter.close();
 		return runContext.putTempFile(tempFile);
 	}
 
@@ -114,7 +112,7 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 		private Map<String, Object> row;
 
 		@Schema(
-			title = "The uri of the stored result",
+			title = "The URI of the stored result",
 			description = "Only populated if using `STORE`"
 		)
 		private URI uri;

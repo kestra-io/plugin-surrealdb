@@ -10,7 +10,7 @@ import javax.validation.constraints.Positive;
 public interface SurrealDBConnectionInterface {
 
 	@Schema(
-		title = "true to use TLS for connection. Default is false"
+		title = "Whether to use TLS for connection. Default is false"
 	)
 	@PluginProperty
 	boolean isUseTls();
@@ -33,34 +33,34 @@ public interface SurrealDBConnectionInterface {
 		title = "Connection host"
 	)
 	@PluginProperty(dynamic = true)
-	@NotNull @NotBlank
+	@NotBlank
 	String getHost();
 
 	@Schema(
 		title = "Plaintext authentication username"
 	)
 	@PluginProperty(dynamic = true)
-	@NotNull @NotBlank
+	@NotBlank
 	String getUsername();
 
 	@Schema(
 		title = "Plaintext authentication password"
 	)
 	@PluginProperty(dynamic = true)
-	@NotNull @NotBlank
+	@NotBlank
 	String getPassword();
 
 	@Schema(
 		title = "Connection namespace"
 	)
 	@PluginProperty(dynamic = true)
-	@NotNull @NotBlank
+	@NotBlank
 	String getNamespace();
 
 	@Schema(
 		title = "Connection database"
 	)
 	@PluginProperty(dynamic = true)
-	@NotNull @NotBlank
+	@NotBlank
 	String getDatabase();
 }

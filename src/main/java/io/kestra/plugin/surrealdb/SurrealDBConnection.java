@@ -27,23 +27,18 @@ public class SurrealDBConnection extends Task implements SurrealDBConnectionInte
 	@Builder.Default
 	private int port = 8000;
 
-	@NotNull
 	@NotBlank
 	private String host;
 
-	@NotNull
 	@NotBlank
 	private String username;
 
-	@NotNull
 	@NotBlank
 	private String password;
 
-	@NotNull
 	@NotBlank
 	private String namespace;
 
-	@NotNull
 	@NotBlank
 	private String database;
 

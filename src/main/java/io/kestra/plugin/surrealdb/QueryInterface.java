@@ -37,5 +37,5 @@ public interface QueryInterface {
 		title = "SurrealQL query to execute."
 	)
 	@PluginProperty(dynamic = true)
-	@NotNull @NotBlank String getQuery();
+	@NotBlank String getQuery();
 }
