@@ -10,7 +10,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 
 @SuperBuilder
@@ -18,7 +17,7 @@ import javax.validation.constraints.Positive;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-public class SurrealDBConnection extends Task implements SurrealDBConnectionInterface {
+public abstract class SurrealDBConnection extends Task implements SurrealDBConnectionInterface {
 
 	@Builder.Default
 	private boolean useTls = false;
