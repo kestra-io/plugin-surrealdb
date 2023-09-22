@@ -10,7 +10,6 @@ import io.kestra.core.models.tasks.common.FetchType;
 import io.kestra.core.models.triggers.AbstractTrigger;
 import io.kestra.core.models.triggers.PollingTriggerInterface;
 import io.kestra.core.models.triggers.TriggerContext;
-import io.kestra.core.models.triggers.TriggerOutput;
 import io.kestra.core.runners.RunContext;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -36,15 +35,35 @@ import java.util.Optional;
 @Plugin(
     examples = {
         @Example(
-            title = "",
+            title = "Wait for SurrealQL query to return results and iterate through rows",
             full = true,
             code = {
-
+                "id: surrealdb-trigger",
+                "namespace: io.kestra.tests",
+                "",
+                "tasks:",
+                "  - id: each",
+                "    type: io.kestra.core.tasks.EachSequential",
+                "    tasks:",
+                "       - id: return",
+                "         type: io.kestra.core.tasks.debugs.Return",
+                "         format: \"{{json(taskrun.value)}}\"",
+                "    value: \"{{ trigger.rows }}\"",
+                "",
+                "triggers:",
+                "  - id: watch",
+                "    type: io.kestra.plugin.surrealdb.Trigger",
+                "    interval: \"PT5M\"",
+                "    host: localhost",
+                "    namespace: surreal_namespace",
+                "    database: surreal_db",
+                "    fetchType: FETCH",
+                "    query: SELECT * FROM SURREAL_TABLE",
             }
         )
     }
 )
-public class Trigger extends AbstractTrigger implements PollingTriggerInterface, TriggerOutput<Query.Output>, SurrealDBConnectionInterface, QueryInterface {
+public class Trigger extends AbstractTrigger implements PollingTriggerInterface, SurrealDBConnectionInterface, QueryInterface {
 
     @Builder.Default
     private boolean useTls = false;
@@ -56,10 +75,8 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @NotBlank
     private String host;
 
-    @NotBlank
     private String username;
 
-    @NotBlank
     private String password;
 
     @NotBlank
