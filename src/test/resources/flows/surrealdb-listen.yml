@@ -7,8 +7,10 @@ triggers:
     host: '127.0.0.1'
     namespace: "some-namespace"
     database: "some-database"
+    username: "Administrator"
+    password: "password"
     fetchType: FETCH_ONE
-    query: SELECT * FROM kestra WHERE c_string=$name
+    query: CREATE kestra SET c_string=$name; SELECT * FROM kestra WHERE c_string=$name
     parameters:
       name: A collection doc
 
