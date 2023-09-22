@@ -24,7 +24,7 @@ sourceCompatibility = 17
 targetCompatibility = 17
 
 group "io.kestra.plugin"
-description 'Plugin template for Kestra'
+description 'Utilize SurrealDB in Kestra workflows for data management.'
 
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
@@ -56,7 +56,6 @@ dependencies {
     // libs included in the final jar
     api group: 'com.surrealdb', name: 'surrealdb-driver', version:  '0.1.0'
     api group: 'org.java-websocket', name: 'Java-WebSocket', version: '1.3.0'
-
 }
 
 
@@ -113,8 +112,8 @@ jar {
     manifest {
         attributes(
                 "X-Kestra-Name": project.name,
-                "X-Kestra-Title": "Template",
-                "X-Kestra-Group": project.group + ".templates",
+                "X-Kestra-Title": "SurrealDB",
+                "X-Kestra-Group": project.group + ".surrealdb",
                 "X-Kestra-Description": project.description,
                 "X-Kestra-Version": project.version
         )
