@@ -1,0 +1,20 @@
+id: surrealdb-listen
+namespace: io.kestra.tests
+
+triggers:
+  - id: watch
+    type: io.kestra.plugin.surrealdb.Trigger
+    host: '127.0.0.1'
+    namespace: "some-namespace"
+    database: "some-database"
+    username: "Administrator"
+    password: "password"
+    fetchType: FETCH_ONE
+    query: CREATE kestra SET c_string=$name; SELECT * FROM kestra WHERE c_string=$name
+    parameters:
+      name: A collection doc
+
+tasks:
+  - id: end
+    type: io.kestra.core.tasks.debugs.Return
+    format: "{{task.id}} > {{taskrun.startDate}}"

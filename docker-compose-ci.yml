@@ -3,7 +3,10 @@ version: "3.6"
 services:
   surrealdb:
     image: surrealdb/surrealdb
+    container_name: surrealdb
     command:
       - start
+      - --user=Administrator
+      - --pass=password
     ports:
       - 8000:8000
