@@ -18,7 +18,7 @@ import javax.validation.constraints.Positive;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-public class SurrealDBConnection extends Task implements SurrealDBConnectionInterface {
+public abstract class SurrealDBConnection extends Task implements SurrealDBConnectionInterface {
 
 	@Builder.Default
 	private boolean useTls = false;
@@ -30,10 +30,8 @@ public class SurrealDBConnection extends Task implements SurrealDBConnectionInte
 	@NotBlank
 	private String host;
 
-	@NotBlank
 	private String username;
 
-	@NotBlank
 	private String password;
 
 	@NotBlank
