@@ -88,8 +88,10 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 	private URI getTempFile(RunContext runContext, List<Map<String, Object>> results) throws IOException {
 		File tempFile = runContext.tempFile(".ion").toFile();
 		try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter(tempFile));
-		     OutputStream outputStream = new FileOutputStream(tempFile)) {
-			FileSerde.write(outputStream, results);
+		    OutputStream outputStream = new FileOutputStream(tempFile)) {
+			for(var row : results) {
+				FileSerde.write(outputStream, row);
+			}
 			fileWriter.flush();
 		}
 
