@@ -4,8 +4,8 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.tasks.common.FetchType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 
 public interface QueryInterface {
