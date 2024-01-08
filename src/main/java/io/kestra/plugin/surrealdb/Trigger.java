@@ -30,12 +30,12 @@ import java.util.Optional;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Query a SurrealDB database on interval to trigger flow on results."
+    title = "Query a SurrealDB database on a regular interval to trigger flow on results."
 )
 @Plugin(
     examples = {
         @Example(
-            title = "Wait for SurrealQL query to return results and iterate through rows",
+            title = "Wait for SurrealQL query to return results, and then iterate through rows.",
             full = true,
             code = {
                 "id: surrealdb-trigger",
@@ -47,7 +47,7 @@ import java.util.Optional;
                 "    tasks:",
                 "       - id: return",
                 "         type: io.kestra.core.tasks.debugs.Return",
-                "         format: \"{{json(taskrun.value)}}\"",
+                "         format: \"{{ json(taskrun.value) }}\"",
                 "    value: \"{{ trigger.rows }}\"",
                 "",
                 "triggers:",
@@ -55,6 +55,9 @@ import java.util.Optional;
                 "    type: io.kestra.plugin.surrealdb.Trigger",
                 "    interval: \"PT5M\"",
                 "    host: localhost",
+                "    port: 8000",
+                "    username: surreal_user",
+                "    password: surreal_passwd",
                 "    namespace: surreal_namespace",
                 "    database: surreal_db",
                 "    fetchType: FETCH",

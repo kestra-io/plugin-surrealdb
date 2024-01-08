@@ -11,11 +11,11 @@ import java.util.Map;
 public interface QueryInterface {
 
 	@Schema(
-		title = "The way you want to store data",
-		description = "FETCH_ONE output the first row\n"
-			+ "FETCH output all the row\n"
-			+ "STORE store all row in a file\n"
-			+ "NONE do nothing"
+		title = "The way you want to store data.",
+		description = "FETCH_ONE - output the first row.\n"
+			+ "FETCH - output all rows as output variable.\n"
+			+ "STORE - store all rows to a file.\n"
+			+ "NONE - do nothing."
 	)
 	@PluginProperty
 	@NotNull FetchType getFetchType();
