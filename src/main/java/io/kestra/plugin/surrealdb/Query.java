@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 @Plugin(
 	examples = {
 		@Example(
-			title = "Send a SurrealQL query to a SurrealDB database",
+			title = "Send a SurrealQL query to a SurrealDB database.",
 			code = {
 				"useTls: true",
 				"port: 8000",
@@ -102,25 +102,25 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 	@Getter
 	public static class Output implements io.kestra.core.models.tasks.Output {
 		@Schema(
-			title = "List containing the fetched data",
-			description = "Only populated if using `FETCH`."
+			title = "List containing the fetched data.",
+			description = "Only populated if using `fetchType: FETCH`."
 		)
 		private List<Map<String, Object>> rows;
 
 		@Schema(
-			title = "Map containing the first row of fetched data",
-			description = "Only populated if using `FETCH_ONE`."
+			title = "Map containing the first row of fetched data.",
+			description = "Only populated if using `fetchType: FETCH_ONE`."
 		)
 		private Map<String, Object> row;
 
 		@Schema(
-			title = "The URI of the stored result",
-			description = "Only populated if using `STORE`"
+			title = "The URI of the stored result in Kestra's internal storage.",
+			description = "Only populated if using `fetchType: STORE`."
 		)
 		private URI uri;
 
 		@Schema(
-			title = "The amount of rows fetched"
+			title = "The number of rows fetched."
 		)
 		private Long size;
 	}
