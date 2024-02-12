@@ -51,7 +51,7 @@ dependencies {
 
     // libs included in the final jar
     api group: 'com.surrealdb', name: 'surrealdb-driver', version:  '0.1.0'
-    api group: 'org.java-websocket', name: 'Java-WebSocket', version: '1.5.5'
+    api group: 'org.java-websocket', name: 'Java-WebSocket', version: '1.5.6'
 }
 
 
