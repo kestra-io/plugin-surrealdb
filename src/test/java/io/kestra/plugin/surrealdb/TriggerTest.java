@@ -51,7 +51,7 @@ public class TriggerTest extends SurrealDBTest {
 
         Worker worker = new Worker(applicationContext, 8, null);
 
-        try (AbstractScheduler scheduler = new JdbcScheduler(this.applicationContext, this.flowListeners) {
+        try (AbstractScheduler scheduler = new JdbcScheduler(this.applicationContext, this.flowListeners)) {
             AtomicReference<Execution> last = new AtomicReference<>();
 
             Runnable receive = executionQueue.receive("surrealdb-listen", execution -> {
@@ -67,6 +67,7 @@ public class TriggerTest extends SurrealDBTest {
             localFlowRepositoryLoader.load(this.getClass().getClassLoader().getResource("flows/surrealdb-listen.yml"));
 
             boolean await = queueCount.await(1, TimeUnit.MINUTES);
+            assertThat(await, is(true));
 
             return last.get();
         }
