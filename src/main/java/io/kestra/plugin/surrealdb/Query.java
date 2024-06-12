@@ -95,7 +95,7 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 			fileWriter.flush();
 		}
 
-		return runContext.putTempFile(tempFile);
+		return runContext.storage().putFile(tempFile);
 	}
 
 	@Builder
