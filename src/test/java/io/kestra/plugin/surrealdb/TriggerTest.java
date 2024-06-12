@@ -6,8 +6,7 @@ import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.repositories.LocalFlowRepositoryLoader;
 import io.kestra.core.runners.Worker;
 import io.kestra.core.schedulers.AbstractScheduler;
-import io.kestra.core.schedulers.DefaultScheduler;
-import io.kestra.core.schedulers.SchedulerTriggerStateInterface;
+import io.kestra.jdbc.runner.JdbcScheduler;
 import io.kestra.core.services.FlowListenersInterface;
 import io.micronaut.context.ApplicationContext;
 import io.kestra.core.junit.annotations.KestraTest;
@@ -33,9 +32,6 @@ public class TriggerTest extends SurrealDBTest {
     private FlowListenersInterface flowListeners;
 
     @Inject
-    private SchedulerTriggerStateInterface triggerState;
-
-    @Inject
     @Named(QueueFactoryInterface.EXECUTION_NAMED)
     private QueueInterface<Execution> executionQueue;
 
@@ -55,7 +51,7 @@ public class TriggerTest extends SurrealDBTest {
 
         Worker worker = new Worker(applicationContext, 8, null);
 
-        try (AbstractScheduler scheduler = new DefaultScheduler(this.applicationContext, this.flowListeners, this.triggerState)) {
+        try (AbstractScheduler scheduler = new JdbcScheduler(this.applicationContext, this.flowListeners) {
             AtomicReference<Execution> last = new AtomicReference<>();
 
             Runnable receive = executionQueue.receive("surrealdb-listen", execution -> {
