@@ -133,7 +133,6 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             .id(id)
             .namespace(context.getNamespace())
             .flowId(context.getFlowId())
-            .flowRevision(context.getFlowRevision())
             .state(new State())
             .trigger(executionTrigger)
             .build();
