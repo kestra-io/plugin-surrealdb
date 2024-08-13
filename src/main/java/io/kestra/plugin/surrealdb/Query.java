@@ -14,6 +14,8 @@ import lombok.experimental.SuperBuilder;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import reactor.core.publisher.Flux;
+
 import java.io.*;
 import java.net.URI;
 import java.util.HashMap;
@@ -88,10 +90,9 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 	private URI getTempFile(RunContext runContext, List<Map<String, Object>> results) throws IOException {
 		File tempFile = runContext.workingDir().createTempFile(".ion").toFile();
 		try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter(tempFile));
-		    OutputStream outputStream = new FileOutputStream(tempFile)) {
-			for(var row : results) {
-				FileSerde.write(outputStream, row);
-			}
+		    var output = new BufferedWriter(new FileWriter(tempFile), FileSerde.BUFFER_SIZE)) {
+			var flux = Flux.fromIterable(results);
+			FileSerde.writeAll(output, flux).block();
 			fileWriter.flush();
 		}
 
