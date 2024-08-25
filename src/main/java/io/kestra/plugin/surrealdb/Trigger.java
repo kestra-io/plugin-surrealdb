@@ -38,7 +38,7 @@ import java.util.Optional;
             title = "Wait for SurrealQL query to return results, and then iterate through rows.",
             full = true,
             code = {
-                "id: surrealdb-trigger",
+                "id: surrealdb_trigger",
                 "namespace: company.team",
                 "",
                 "tasks:",

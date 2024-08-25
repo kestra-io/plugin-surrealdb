@@ -30,20 +30,27 @@ import java.util.stream.Stream;
 @NoArgsConstructor
 @Schema(title = "Query a SurrealDB database with SurrealQL.")
 @Plugin(
-	examples = {
-		@Example(
-			title = "Send a SurrealQL query to a SurrealDB database.",
-			code = {
-				"useTls: true",
-				"port: 8000",
-				"host: localhost",
-				"username: surreal_user",
-				"password: surreal_passwd",
-				"database: surreal_db",
-				"namespace: surreal_namespace",
-				"query: SELECT * FROM SURREAL_TABLE",
-				"fetchType: STORE"
-			}
+    examples = {
+        @Example(
+            title = "Send a SurrealQL query to a SurrealDB database.",
+            full = true,
+            code = """
+                   id: surrealdb_query
+                   namespace: company.team
+                   
+                   tasks:
+                     - id: select
+                       type: io.kestra.plugin.surrealdb.Query
+                       useTls: true
+                       host: localhost
+                       port: 8000
+                       username: surreal_user
+                       password: surreal_passwd
+                       database: surreal_db
+                       namespace: surreal_namespace
+                       query: SELECT * FROM SURREAL_TABLE
+                       fetchType: STORE
+                   """
 		)
 	}
 )
