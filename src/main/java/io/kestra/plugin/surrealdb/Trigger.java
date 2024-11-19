@@ -37,32 +37,32 @@ import java.util.Optional;
         @Example(
             title = "Wait for SurrealQL query to return results, and then iterate through rows.",
             full = true,
-            code = {
-                "id: surrealdb_trigger",
-                "namespace: company.team",
-                "",
-                "tasks:",
-                "  - id: each",
-                "    type: io.kestra.plugin.core.flow.EachSequential",
-                "    tasks:",
-                "      - id: return",
-                "        type: io.kestra.plugin.core.debug.Return",
-                "        format: \"{{ json(taskrun.value) }}\"",
-                "    value: \"{{ trigger.rows }}\"",
-                "",
-                "triggers:",
-                "  - id: watch",
-                "    type: io.kestra.plugin.surrealdb.Trigger",
-                "    interval: \"PT5M\"",
-                "    host: localhost",
-                "    port: 8000",
-                "    username: surreal_user",
-                "    password: surreal_passwd",
-                "    namespace: surreal_namespace",
-                "    database: surreal_db",
-                "    fetchType: FETCH",
-                "    query: SELECT * FROM SURREAL_TABLE",
-            }
+            code = """
+                id: surrealdb_trigger
+                namespace: company.team
+                
+                tasks:
+                  - id: each
+                    type: io.kestra.plugin.core.flow.ForEach
+                    values: "{{ trigger.rows }}"
+                    tasks:
+                      - id: return
+                        type: io.kestra.plugin.core.debug.Return
+                        format: "{{ json(taskrun.value) }}"
+                
+                triggers:
+                  - id: watch
+                    type: io.kestra.plugin.surrealdb.Trigger
+                    interval: "PT5M"
+                    host: localhost
+                    port: 8000
+                    username: surreal_user
+                    password: surreal_passwd
+                    namespace: surreal_namespace
+                    database: surreal_db
+                    fetchType: FETCH
+                    query: SELECT * FROM SURREAL_TABLE
+                """
         )
     }
 )
