@@ -1,6 +1,7 @@
 package io.kestra.plugin.surrealdb;
 
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotBlank;
@@ -12,8 +13,7 @@ public interface SurrealDBConnectionInterface {
 	@Schema(
 		title = "Specify whether to use TLS for connection. Default is `false`."
 	)
-	@PluginProperty
-	boolean isUseTls();
+	Property<Boolean> getUseTls();
 
 	@Schema(
 		title = "Connection timeout. Default is `60` seconds."
@@ -39,14 +39,12 @@ public interface SurrealDBConnectionInterface {
 	@Schema(
 		title = "Plaintext authentication username."
 	)
-	@PluginProperty(dynamic = true)
-	String getUsername();
+    Property<String> getUsername();
 
 	@Schema(
 		title = "Plaintext authentication password."
 	)
-	@PluginProperty(dynamic = true)
-	String getPassword();
+	Property<String> getPassword();
 
 	@Schema(
 		title = "Connection namespace."

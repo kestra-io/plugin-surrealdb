@@ -4,6 +4,7 @@ import com.surrealdb.driver.SyncSurrealDriver;
 import com.surrealdb.driver.model.QueryResult;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.common.FetchType;
 import io.kestra.core.runners.RunContext;
@@ -37,7 +38,7 @@ import java.util.stream.Stream;
             code = """
                    id: surrealdb_query
                    namespace: company.team
-                   
+
                    tasks:
                      - id: select
                        type: io.kestra.plugin.surrealdb.Query
@@ -58,10 +59,10 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 
 	@NotNull
 	@Builder.Default
-	protected FetchType fetchType = FetchType.STORE;
+	protected Property<FetchType> fetchType = Property.of(FetchType.STORE);
 
 	@Builder.Default
-	protected Map<String, String> parameters = new HashMap<>();
+	protected Property<Map<String, String>> parameters = Property.of(new HashMap<>());
 
 	@NotBlank
 	protected String query;
@@ -72,7 +73,8 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 
 		String renderedQuery = runContext.render(query);
 
-		List<QueryResult<Object>> results = driver.query(renderedQuery, parameters, Object.class);
+        Map<String, String> parametersValue = runContext.render(parameters).asMap(String.class, String.class).isEmpty() ? new HashMap<>() : runContext.render(parameters).asMap(String.class, String.class);
+		List<QueryResult<Object>> results = driver.query(renderedQuery, parametersValue, Object.class);
 
 		Query.Output.OutputBuilder outputBuilder = Output.builder().size(results.stream()
 			.mapToLong(result -> (long) result.getResult().size())
@@ -80,7 +82,7 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 
 		super.disconnect();
 
-		return (switch (fetchType) {
+		return (switch (runContext.render(fetchType).as(FetchType.class).orElseThrow()) {
 			case FETCH -> outputBuilder.rows(getResultStream(results).toList());
 			case FETCH_ONE -> outputBuilder.row(getResultStream(results).findFirst().orElse(null));
 			case STORE -> outputBuilder.uri(getTempFile(runContext, getResultStream(results).toList()));

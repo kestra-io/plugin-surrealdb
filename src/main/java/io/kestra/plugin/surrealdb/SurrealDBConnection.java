@@ -4,6 +4,7 @@ import com.surrealdb.connection.SurrealConnection;
 import com.surrealdb.connection.SurrealWebSocketConnection;
 import com.surrealdb.driver.SyncSurrealDriver;
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 import lombok.*;
@@ -20,7 +21,7 @@ import jakarta.validation.constraints.Positive;
 public abstract class SurrealDBConnection extends Task implements SurrealDBConnectionInterface {
 
 	@Builder.Default
-	private boolean useTls = false;
+	private Property<Boolean> useTls = Property.of(false);
 
 	@Positive
 	@Builder.Default
@@ -29,9 +30,9 @@ public abstract class SurrealDBConnection extends Task implements SurrealDBConne
 	@NotBlank
 	private String host;
 
-	private String username;
+	private Property<String> username;
 
-	private String password;
+	private Property<String> password;
 
 	@NotBlank
 	private String namespace;
@@ -45,14 +46,14 @@ public abstract class SurrealDBConnection extends Task implements SurrealDBConne
 
 	private SurrealConnection connection;
 
-	protected SyncSurrealDriver connect(RunContext context) throws IllegalVariableEvaluationException {
-		SurrealWebSocketConnection connection = new SurrealWebSocketConnection(context.render(host), port, useTls);
+	protected SyncSurrealDriver connect(RunContext runContext) throws IllegalVariableEvaluationException {
+		SurrealWebSocketConnection connection = new SurrealWebSocketConnection(runContext.render(host), port, runContext.render(useTls).as(Boolean.class).orElseThrow());
 		connection.connect(connectionTimeout);
 
 		SyncSurrealDriver driver = new SyncSurrealDriver(connection);
 
-		signIn(driver, context);
-		useDatabase(driver, context);
+		signIn(driver, runContext);
+		useDatabase(driver, runContext);
 
 		return driver;
 	}
@@ -69,7 +70,7 @@ public abstract class SurrealDBConnection extends Task implements SurrealDBConne
 
 	private void signIn(SyncSurrealDriver driver, RunContext context) throws IllegalVariableEvaluationException {
 		if (username != null && password != null) {
-			driver.signIn(context.render(username), context.render(password));
+			driver.signIn(context.render(username).as(String.class).orElseThrow(), context.render(password).as(String.class).orElseThrow());
 		}
 	}
 }

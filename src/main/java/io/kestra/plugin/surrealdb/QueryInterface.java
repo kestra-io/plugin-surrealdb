@@ -1,6 +1,7 @@
 package io.kestra.plugin.surrealdb;
 
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.common.FetchType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -17,8 +18,8 @@ public interface QueryInterface {
 			+ "STORE - store all rows to a file.\n"
 			+ "NONE - do nothing."
 	)
-	@PluginProperty
-	@NotNull FetchType getFetchType();
+	@NotNull
+    Property<FetchType> getFetchType();
 
 	@Schema(
 		title = "Query parameters, can be named parameters.",
@@ -30,8 +31,7 @@ public interface QueryInterface {
 			Map.class
 		}
 	)
-	@PluginProperty(dynamic = true)
-	Map<String, String> getParameters();
+	Property<Map<String, String>> getParameters();
 
 	@Schema(
 		title = "SurrealQL query to execute."
