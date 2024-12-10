@@ -1,5 +1,7 @@
 package io.kestra.plugin.surrealdb;
 
+import io.kestra.core.models.property.Property;
+
 public class SurrealDBTest {
 	protected static final String TABLE = "testtable_";
 	protected static final String NAMESPACE = "some-namespace";
@@ -13,8 +15,8 @@ public class SurrealDBTest {
 			.host(HOST)
 			.namespace(NAMESPACE)
 			.database(DATABASE)
-			.username(USERNAME)
-			.password(PASSWORD);
+			.username(Property.of(USERNAME))
+			.password(Property.of(PASSWORD));
 	}
 
 }

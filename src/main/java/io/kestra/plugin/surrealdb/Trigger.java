@@ -6,6 +6,7 @@ import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.executions.ExecutionTrigger;
 import io.kestra.core.models.flows.State;
+import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.common.FetchType;
 import io.kestra.core.models.triggers.AbstractTrigger;
 import io.kestra.core.models.triggers.PollingTriggerInterface;
@@ -40,7 +41,7 @@ import java.util.Optional;
             code = """
                 id: surrealdb_trigger
                 namespace: company.team
-                
+
                 tasks:
                   - id: each
                     type: io.kestra.plugin.core.flow.ForEach
@@ -49,7 +50,7 @@ import java.util.Optional;
                       - id: return
                         type: io.kestra.plugin.core.debug.Return
                         format: "{{ json(taskrun.value) }}"
-                
+
                 triggers:
                   - id: watch
                     type: io.kestra.plugin.surrealdb.Trigger
@@ -69,7 +70,7 @@ import java.util.Optional;
 public class Trigger extends AbstractTrigger implements PollingTriggerInterface, SurrealDBConnectionInterface, QueryInterface {
 
     @Builder.Default
-    private boolean useTls = false;
+    private Property<Boolean> useTls = Property.of(false);
 
     @Positive
     @Builder.Default
@@ -78,9 +79,9 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @NotBlank
     private String host;
 
-    private String username;
+    private Property<String> username;
 
-    private String password;
+    private Property<String> password;
 
     @NotBlank
     private String namespace;
@@ -94,10 +95,10 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
 
     @NotNull
     @Builder.Default
-    protected FetchType fetchType = FetchType.STORE;
+    protected Property<FetchType> fetchType = Property.of(FetchType.STORE);
 
     @Builder.Default
-    protected Map<String, String> parameters = new HashMap<>();
+    protected Property<Map<String, String>> parameters = Property.of(new HashMap<>());
 
     @NotBlank
     protected String query;
