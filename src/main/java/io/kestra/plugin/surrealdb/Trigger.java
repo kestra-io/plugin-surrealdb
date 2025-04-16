@@ -31,7 +31,7 @@ import java.util.Optional;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Query a SurrealDB database on a regular interval to trigger flow on results."
+    title = "Trigger a flow if a periodically executed SurrealDB query returns a non-empty result set."
 )
 @Plugin(
     examples = {
