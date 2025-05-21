@@ -7,6 +7,7 @@ import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.core.tenant.TenantService;
 import jakarta.inject.Inject;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
@@ -322,7 +323,7 @@ public class QueryTest extends SurrealDBTest {
 
 		assertThat(queryCreate.getSize(), is(1L));
 
-		String outputFileContent = IOUtils.toString(storageInterface.get(null, null, queryCreate.getUri()), Charsets.UTF_8);
+		String outputFileContent = IOUtils.toString(storageInterface.get(TenantService.MAIN_TENANT, null, queryCreate.getUri()), Charsets.UTF_8);
 		Map rows = JacksonMapper.ofIon().readValue(outputFileContent, Map.class);
 
 		assertThat(rows.get("c_string"), is("A collection doc"));
@@ -337,7 +338,7 @@ public class QueryTest extends SurrealDBTest {
 
 		assertThat(queryResult.getSize(), is(1L));
 
-		outputFileContent = IOUtils.toString(storageInterface.get(null, null, queryResult.getUri()), Charsets.UTF_8);
+		outputFileContent = IOUtils.toString(storageInterface.get(TenantService.MAIN_TENANT, null, queryResult.getUri()), Charsets.UTF_8);
 		rows = JacksonMapper.ofIon().readValue(outputFileContent, Map.class);
 
 		assertThat(rows.get("c_string"), is("A collection doc"));
