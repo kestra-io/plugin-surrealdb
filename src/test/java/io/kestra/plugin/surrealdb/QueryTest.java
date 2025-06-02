@@ -63,8 +63,8 @@ public class QueryTest extends SurrealDBTest {
       }],
       c_date = <datetime> $date
       """.formatted(TABLE, id))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
-			.parameters(Property.of(parameters))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
+			.parameters(Property.ofValue(parameters))
 			.build().run(runContext);
 
 		Map<String, Object> creationRows = queryCreation.getRow();
@@ -88,7 +88,7 @@ public class QueryTest extends SurrealDBTest {
 
 		Query query = authentifiedQueryBuilder()
 			.query("SELECT * FROM %s:%s".formatted(TABLE, id))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build();
 
 		Query.Output queryResult = query.run(runContext);
@@ -97,7 +97,7 @@ public class QueryTest extends SurrealDBTest {
 			.query("""
       DELETE %s:%s
       """.formatted(TABLE, id))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		assertThat(queryDelete.getRow(), nullValue());
@@ -135,8 +135,8 @@ public class QueryTest extends SurrealDBTest {
 
 		Query.Output queryCreate = authentifiedQueryBuilder()
 			.query("CREATE %s:%s SET c_string=$name".formatted(TABLE, id))
-			.parameters(Property.of(parameters))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.parameters(Property.ofValue(parameters))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		assertThat(queryCreate.getSize(), is(1L));
@@ -144,8 +144,8 @@ public class QueryTest extends SurrealDBTest {
 
 		Query query = authentifiedQueryBuilder()
 			.query("SELECT * FROM %s:%s WHERE c_string=$name".formatted(TABLE, id))
-			.parameters(Property.of(parameters))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.parameters(Property.ofValue(parameters))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build();
 
 		Query.Output queryResult = query.run(runContext);
@@ -154,7 +154,7 @@ public class QueryTest extends SurrealDBTest {
 			.query("""
       DELETE %s:%s
       """.formatted(TABLE, id))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		assertThat(queryDelete.getRow(), nullValue());
@@ -180,8 +180,8 @@ public class QueryTest extends SurrealDBTest {
       CREATE %s:%s
       SET c_string = %s, c_int = <int> %s
       """.formatted(TABLE, id, firstArg, secondArg))
-			.parameters(Property.of(parameters))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.parameters(Property.ofValue(parameters))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		assertThat(queryCreate.getSize(), is(1L));
@@ -196,8 +196,8 @@ public class QueryTest extends SurrealDBTest {
 				       FROM %s
 				       WHERE c_string = %s AND c_int = <int> %s
 				       """.formatted(TABLE, firstArg, secondArg))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
-			.parameters(Property.of(parameters))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
+			.parameters(Property.ofValue(parameters))
 			.build();
 
 		Query.Output queryResult = query.run(runContext);
@@ -206,7 +206,7 @@ public class QueryTest extends SurrealDBTest {
 			.query("""
       DELETE %s:%s
       """.formatted(TABLE, id))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		assertThat(queryDelete.getRow(), nullValue());
@@ -230,21 +230,21 @@ public class QueryTest extends SurrealDBTest {
 
 		authentifiedQueryBuilder()
 			.query("CREATE %s:%s SET c_string = $name".formatted(TABLE, firstId))
-			.parameters(Property.of(parameters))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.parameters(Property.ofValue(parameters))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		authentifiedQueryBuilder()
 			.query("CREATE %s:%s SET c_string = $name".formatted(TABLE, secondId))
-			.parameters(Property.of(parameters))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.parameters(Property.ofValue(parameters))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		Query.Output updateQuery = authentifiedQueryBuilder()
 			.query("""
 			      UPDATE %s:%s SET c_string = $name RETURN *""".formatted(TABLE, secondId))
-			.parameters(Property.of(Map.of("name", "Another Kestra Doc")))
-			.fetchType(Property.of(FetchType.NONE))
+			.parameters(Property.ofValue(Map.of("name", "Another Kestra Doc")))
+			.fetchType(Property.ofValue(FetchType.NONE))
 			.build().run(runContext);
 
 		// Only available if adding 'RETURNING *' to insert
@@ -252,7 +252,7 @@ public class QueryTest extends SurrealDBTest {
 
 		Query query = authentifiedQueryBuilder()
 			.query("SELECT * FROM " + TABLE)
-			.fetchType(Property.of(FetchType.FETCH))
+			.fetchType(Property.ofValue(FetchType.FETCH))
 			.build();
 
 		Query.Output queryResult = query.run(runContext);
@@ -271,7 +271,7 @@ public class QueryTest extends SurrealDBTest {
 		// If we precise field, we get rid of bucket layer in output
 		query = authentifiedQueryBuilder()
 			.query("SELECT c_string FROM " + TABLE)
-			.fetchType(Property.of(FetchType.FETCH))
+			.fetchType(Property.ofValue(FetchType.FETCH))
 			.build();
 
 		queryResult = query.run(runContext);
@@ -290,7 +290,7 @@ public class QueryTest extends SurrealDBTest {
 			.query("""
       DELETE %s:%s
       """.formatted(TABLE, firstId))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		assertThat(queryDelete.getRow(), nullValue());
@@ -300,7 +300,7 @@ public class QueryTest extends SurrealDBTest {
 			.query("""
       DELETE %s:%s
       """.formatted(TABLE, secondId))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		assertThat(queryDelete.getRow(), nullValue());
@@ -316,8 +316,8 @@ public class QueryTest extends SurrealDBTest {
 		String id = UUID.randomUUID().toString().toLowerCase().replace("-", "");
 		Query.Output queryCreate = authentifiedQueryBuilder()
 			.query("CREATE %s:%s SET c_string=$name".formatted(TABLE, id))
-			.parameters(Property.of(parameters))
-			.fetchType(Property.of(FetchType.STORE))
+			.parameters(Property.ofValue(parameters))
+			.fetchType(Property.ofValue(FetchType.STORE))
 			.build().run(runContext);
 
 
@@ -330,8 +330,8 @@ public class QueryTest extends SurrealDBTest {
 
 		Query query = authentifiedQueryBuilder()
 			.query("SELECT * FROM %s WHERE c_string=$name".formatted(TABLE))
-			.parameters(Property.of(parameters))
-			.fetchType(Property.of(FetchType.STORE))
+			.parameters(Property.ofValue(parameters))
+			.fetchType(Property.ofValue(FetchType.STORE))
 			.build();
 
 		Query.Output queryResult = query.run(runContext);
@@ -347,7 +347,7 @@ public class QueryTest extends SurrealDBTest {
 			.query("""
       DELETE %s:%s
       """.formatted(TABLE, id))
-			.fetchType(Property.of(FetchType.FETCH_ONE))
+			.fetchType(Property.ofValue(FetchType.FETCH_ONE))
 			.build().run(runContext);
 
 		assertThat(queryDelete.getRow(), nullValue());

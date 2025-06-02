@@ -59,10 +59,10 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 
 	@NotNull
 	@Builder.Default
-	protected Property<FetchType> fetchType = Property.of(FetchType.STORE);
+	protected Property<FetchType> fetchType = Property.ofValue(FetchType.STORE);
 
 	@Builder.Default
-	protected Property<Map<String, String>> parameters = Property.of(new HashMap<>());
+	protected Property<Map<String, String>> parameters = Property.ofValue(new HashMap<>());
 
 	@NotBlank
 	protected String query;

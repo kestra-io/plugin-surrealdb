@@ -15,8 +15,8 @@ public class SurrealDBTest {
 			.host(HOST)
 			.namespace(NAMESPACE)
 			.database(DATABASE)
-			.username(Property.of(USERNAME))
-			.password(Property.of(PASSWORD));
+			.username(Property.ofValue(USERNAME))
+			.password(Property.ofValue(PASSWORD));
 	}
 
 }
