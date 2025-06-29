@@ -70,7 +70,7 @@ import java.util.Optional;
 public class Trigger extends AbstractTrigger implements PollingTriggerInterface, SurrealDBConnectionInterface, QueryInterface {
 
     @Builder.Default
-    private Property<Boolean> useTls = Property.of(false);
+    private Property<Boolean> useTls = Property.ofValue(false);
 
     @Positive
     @Builder.Default
@@ -95,10 +95,10 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
 
     @NotNull
     @Builder.Default
-    protected Property<FetchType> fetchType = Property.of(FetchType.STORE);
+    protected Property<FetchType> fetchType = Property.ofValue(FetchType.STORE);
 
     @Builder.Default
-    protected Property<Map<String, String>> parameters = Property.of(new HashMap<>());
+    protected Property<Map<String, String>> parameters = Property.ofValue(new HashMap<>());
 
     @NotBlank
     protected String query;

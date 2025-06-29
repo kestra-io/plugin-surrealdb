@@ -21,7 +21,7 @@ import jakarta.validation.constraints.Positive;
 public abstract class SurrealDBConnection extends Task implements SurrealDBConnectionInterface {
 
 	@Builder.Default
-	private Property<Boolean> useTls = Property.of(false);
+	private Property<Boolean> useTls = Property.ofValue(false);
 
 	@Positive
 	@Builder.Default
