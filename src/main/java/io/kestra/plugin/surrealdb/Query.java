@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @SuperBuilder
@@ -77,8 +78,8 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 		List<QueryResult<Object>> results = driver.query(renderedQuery, parametersValue, Object.class);
 
 		Query.Output.OutputBuilder outputBuilder = Output.builder().size(results.stream()
-			.mapToLong(result -> (long) result.getResult().size())
-			.sum());
+            .mapToLong(result -> result.getResult() != null ? (long) result.getResult().size() : (long) 0)
+            .sum());
 
 		super.disconnect();
 
@@ -93,6 +94,7 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 	private Stream<Map<String, Object>> getResultStream(List<QueryResult<Object>> results) {
 		return results.stream()
 			.map(QueryResult::getResult)
+            .filter(Objects::nonNull)
 			.flatMap(list -> list.stream().map(object -> (Map<String, Object>) object));
 	}
 
