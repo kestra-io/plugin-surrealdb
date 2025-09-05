@@ -5,11 +5,12 @@ import io.kestra.core.queues.QueueFactoryInterface;
 import io.kestra.core.queues.QueueInterface;
 import io.kestra.core.repositories.LocalFlowRepositoryLoader;
 import io.kestra.core.runners.Worker;
-import io.kestra.core.schedulers.AbstractScheduler;
+import io.kestra.scheduler.AbstractScheduler;
 import io.kestra.core.utils.IdUtils;
 import io.kestra.core.utils.TestsUtils;
 import io.kestra.jdbc.runner.JdbcScheduler;
 import io.kestra.core.services.FlowListenersInterface;
+import io.kestra.worker.DefaultWorker;
 import io.micronaut.context.ApplicationContext;
 import io.kestra.core.junit.annotations.KestraTest;
 import jakarta.inject.Inject;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +55,7 @@ public class TriggerTest extends SurrealDBTest {
     private Execution triggerFlow() throws Exception {
         CountDownLatch queueCount = new CountDownLatch(1);
 
-        try (Worker worker = applicationContext.createBean(Worker.class, IdUtils.create(), 8, null)) {
+        try (DefaultWorker worker = applicationContext.createBean(DefaultWorker.class, UUID.randomUUID().toString(), 8, null);) {
             try (AbstractScheduler scheduler = new JdbcScheduler(this.applicationContext, this.flowListeners)) {
                 Flux<Execution> receive = TestsUtils.receive(executionQueue, execution -> {
                     queueCount.countDown();
