@@ -1,8 +1,8 @@
 group: io.kestra.plugin.surrealdb
 name: "surrealdb"
 title: "SurrealDB"
-description: "This sub-group of plugins contains tasks for using SurrealDB. SurrealDB is an end-to-end cloud-native database that reduce development time, and build secure, performant apps quickly and cost-effectively. Supports multiple querying languages: SQL, GraphQL, ACID transactions, structured and unstructured data, graph querying, full-text indexing, and geospatial querying."
-body: ""
+description: "Tasks that run SurrealQL queries against SurrealDB."
+body: "Provide SurrealDB endpoint details (namespace, database, username/password or token) and SurrealQL statements to query or mutate data, returning results and metrics for downstream workflows."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
