@@ -30,7 +30,10 @@ import java.util.stream.Stream;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-@Schema(title = "Query a SurrealDB database with SurrealQL.")
+@Schema(
+    title = "Run a SurrealDB query",
+    description = "Executes a SurrealQL statement against a SurrealDB database. Defaults to `fetchType: STORE`, which streams rows to internal storage; use `FETCH` or `FETCH_ONE` to surface rows directly. TLS is off by default; keep credentials in secrets."
+)
 @Plugin(
     examples = {
         @Example(
@@ -114,25 +117,25 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 	@Getter
 	public static class Output implements io.kestra.core.models.tasks.Output {
 		@Schema(
-			title = "List containing the fetched data.",
-			description = "Only populated if using `fetchType: FETCH`."
+			title = "All fetched rows",
+			description = "Populated only when `fetchType: FETCH`."
 		)
 		private List<Map<String, Object>> rows;
 
 		@Schema(
-			title = "Map containing the first row of fetched data.",
-			description = "Only populated if using `fetchType: FETCH_ONE`."
+			title = "First fetched row",
+			description = "Populated only when `fetchType: FETCH_ONE`."
 		)
 		private Map<String, Object> row;
 
 		@Schema(
-			title = "The URI of the stored result in Kestra's internal storage.",
-			description = "Only populated if using `fetchType: STORE`."
+			title = "URI of stored result",
+			description = "Internal storage URI populated only when `fetchType: STORE`."
 		)
 		private URI uri;
 
 		@Schema(
-			title = "The number of rows fetched."
+			title = "Number of rows fetched"
 		)
 		private Long size;
 	}

@@ -12,19 +12,15 @@ import java.util.Map;
 public interface QueryInterface {
 
 	@Schema(
-		title = "The way you want to store data.",
-		description = "FETCH_ONE - output the first row.\n"
-			+ "FETCH - output all rows as output variable.\n"
-			+ "STORE - store all rows to a file.\n"
-			+ "NONE - do nothing."
+		title = "Result handling mode",
+		description = "Controls how query results are returned. `FETCH_ONE` outputs the first row, `FETCH` outputs all rows, `STORE` writes rows to internal storage, `NONE` skips output creation."
 	)
 	@NotNull
     Property<FetchType> getFetchType();
 
 	@Schema(
-		title = "Query parameters, can be named parameters.",
-		description = "See SurrealDB documentation about SurrealQL Prepared Statements for query syntax." +
-			"This should be supplied with a parameter map using named parameters.",
+		title = "Named query parameters",
+		description = "SurrealQL prepared-statement parameters rendered before execution. Provide a map of named placeholders to values.",
 		example = "my-field: my-value\n"+
 			"my-second-field: my-second-value",
 		allOf = {
@@ -34,7 +30,7 @@ public interface QueryInterface {
 	Property<Map<String, String>> getParameters();
 
 	@Schema(
-		title = "SurrealQL query to execute."
+		title = "SurrealQL query text"
 	)
 	@PluginProperty(dynamic = true)
 	@NotBlank String getQuery();
