@@ -31,7 +31,8 @@ import java.util.Optional;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Trigger a flow if a periodically executed SurrealDB query returns a non-empty result set."
+    title = "Trigger Flow when SurrealDB query returns rows",
+    description = "Polls a SurrealQL query on a fixed interval (default 1 minute) and starts the Flow when it returns at least one row. Defaults to `fetchType: STORE`, which uploads results to internal storage; use `FETCH` or `FETCH_ONE` to surface rows on `trigger`. TLS is disabled by default; keep credentials in secrets."
 )
 @Plugin(
     examples = {
@@ -103,6 +104,10 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @NotBlank
     protected String query;
 
+    @Schema(
+        title = "Polling interval",
+        description = "Time between query executions; default 1 minute."
+    )
     @Builder.Default
     protected final Duration interval = Duration.ofMinutes(1);
 

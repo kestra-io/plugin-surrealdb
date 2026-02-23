@@ -11,50 +11,53 @@ import jakarta.validation.constraints.Positive;
 public interface SurrealDBConnectionInterface {
 
 	@Schema(
-		title = "Specify whether to use TLS for connection. Default is `false`."
+		title = "Enable TLS for connection",
+		description = "Use TLS when connecting to SurrealDB; default is `false`."
 	)
 	Property<Boolean> getUseTls();
 
 	@Schema(
-		title = "Connection timeout. Default is `60` seconds."
+		title = "Connection timeout",
+		description = "Timeout for opening the connection in seconds; default is 60."
 	)
 	@PluginProperty
 	@Positive
 	int getConnectionTimeout();
 
 	@Schema(
-		title = "Connection port. Default value is `8000`."
+		title = "Connection port",
+		description = "TCP port for the SurrealDB endpoint; default is 8000."
 	)
 	@PluginProperty
 	@Positive
 	int getPort();
 
 	@Schema(
-		title = "Connection host."
+		title = "Connection host"
 	)
 	@PluginProperty(dynamic = true)
 	@NotBlank
 	String getHost();
 
 	@Schema(
-		title = "Plaintext authentication username."
+		title = "Plaintext authentication username"
 	)
     Property<String> getUsername();
 
 	@Schema(
-		title = "Plaintext authentication password."
+		title = "Plaintext authentication password"
 	)
 	Property<String> getPassword();
 
 	@Schema(
-		title = "Connection namespace."
+		title = "Connection namespace"
 	)
 	@PluginProperty(dynamic = true)
 	@NotBlank
 	String getNamespace();
 
 	@Schema(
-		title = "Connection database."
+		title = "Connection database"
 	)
 	@PluginProperty(dynamic = true)
 	@NotBlank
