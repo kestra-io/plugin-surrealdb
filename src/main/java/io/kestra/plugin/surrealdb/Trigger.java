@@ -1,5 +1,12 @@
 package io.kestra.plugin.surrealdb;
 
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.conditions.ConditionContext;
@@ -12,18 +19,13 @@ import io.kestra.core.models.triggers.AbstractTrigger;
 import io.kestra.core.models.triggers.PollingTriggerInterface;
 import io.kestra.core.models.triggers.TriggerContext;
 import io.kestra.core.runners.RunContext;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import org.slf4j.Logger;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
 @ToString
