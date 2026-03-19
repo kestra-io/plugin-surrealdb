@@ -1,0 +1,179 @@
+id: all_surrealdb
+namespace: sanitychecks.plugin-surrealdb
+
+variables:
+  username: Administrator
+  password: password
+  namespace: sanity_namespace
+  database: sanity_database
+  table: sanity_records
+
+tasks:
+  - id: docker_start
+    type: io.kestra.plugin.docker.Run
+    containerImage: surrealdb/surrealdb
+    commands:
+      - start
+      - "--user={{ vars.username }}"
+      - "--pass={{ vars.password }}"
+      - memory
+    portBindings:
+      - "8000:8000"
+    wait: false
+
+  - id: healthcheck
+    type: io.kestra.plugin.core.http.Request
+    uri: "http://localhost:8000/health"
+    method: GET
+    retry:
+      type: constant
+      interval: PT3S
+      maxAttempt: 20
+
+  - id: create_alpha
+    type: io.kestra.plugin.surrealdb.Query
+    host: localhost
+    port: 8000
+    username: "{{ vars.username }}"
+    password: "{{ vars.password }}"
+    namespace: "{{ vars.namespace }}"
+    database: "{{ vars.database }}"
+    fetchType: FETCH_ONE
+    parameters:
+      name: alpha
+      status: created
+      score: "1"
+    query: |
+      CREATE {{ vars.table }}:alpha CONTENT {
+        name: $name,
+        status: $status,
+        score: <int> $score,
+        tags: ["seed"]
+      }
+
+  - id: create_beta
+    type: io.kestra.plugin.surrealdb.Query
+    host: localhost
+    port: 8000
+    username: "{{ vars.username }}"
+    password: "{{ vars.password }}"
+    namespace: "{{ vars.namespace }}"
+    database: "{{ vars.database }}"
+    fetchType: FETCH_ONE
+    parameters:
+      name: beta
+      status: created
+      score: "3"
+    query: |
+      CREATE {{ vars.table }}:beta CONTENT {
+        name: $name,
+        status: $status,
+        score: <int> $score,
+        tags: ["seed", "secondary"]
+      }
+
+  - id: update_alpha
+    type: io.kestra.plugin.surrealdb.Query
+    host: localhost
+    port: 8000
+    username: "{{ vars.username }}"
+    password: "{{ vars.password }}"
+    namespace: "{{ vars.namespace }}"
+    database: "{{ vars.database }}"
+    fetchType: NONE
+    parameters:
+      status: updated
+      score: "2"
+    query: |
+      UPDATE {{ vars.table }}:alpha CONTENT {
+        name: "alpha",
+        status: $status,
+        score: <int> $score,
+        tags: ["seed", "updated"]
+      } RETURN *
+
+  - id: select_all
+    type: io.kestra.plugin.surrealdb.Query
+    host: localhost
+    port: 8000
+    username: "{{ vars.username }}"
+    password: "{{ vars.password }}"
+    namespace: "{{ vars.namespace }}"
+    database: "{{ vars.database }}"
+    fetchType: FETCH
+    query: |
+      SELECT id, name, status, score, tags
+      FROM {{ vars.table }}
+      ORDER BY score DESC
+
+  - id: select_alpha_store
+    type: io.kestra.plugin.surrealdb.Query
+    host: localhost
+    port: 8000
+    username: "{{ vars.username }}"
+    password: "{{ vars.password }}"
+    namespace: "{{ vars.namespace }}"
+    database: "{{ vars.database }}"
+    fetchType: STORE
+    query: |
+      SELECT id, name, status, score, tags
+      FROM {{ vars.table }}:alpha
+
+  - id: delete_beta
+    type: io.kestra.plugin.surrealdb.Query
+    host: localhost
+    port: 8000
+    username: "{{ vars.username }}"
+    password: "{{ vars.password }}"
+    namespace: "{{ vars.namespace }}"
+    database: "{{ vars.database }}"
+    fetchType: NONE
+    query: |
+      DELETE {{ vars.table }}:beta
+
+  - id: select_remaining
+    type: io.kestra.plugin.surrealdb.Query
+    host: localhost
+    port: 8000
+    username: "{{ vars.username }}"
+    password: "{{ vars.password }}"
+    namespace: "{{ vars.namespace }}"
+    database: "{{ vars.database }}"
+    fetchType: FETCH
+    query: |
+      SELECT id, name, status, score, tags
+      FROM {{ vars.table }}
+      ORDER BY name ASC
+
+  - id: assert
+    type: io.kestra.plugin.core.execution.Assert
+    conditions:
+      - "{{ outputs.healthcheck.code == 200 }}"
+      - "{{ outputs.create_alpha.size == 1 }}"
+      - "{{ outputs.create_alpha.row.name == 'alpha' }}"
+      - "{{ outputs.create_alpha.row.status == 'created' }}"
+      - "{{ outputs.create_beta.row.name == 'beta' }}"
+      - "{{ outputs.create_beta.row.score == 3 }}"
+      - "{{ outputs.update_alpha.size == 1 }}"
+      - "{{ outputs.select_all.size == 2 }}"
+      - "{{ outputs.select_all.rows[0].name == 'beta' }}"
+      - "{{ outputs.select_all.rows[0].score == 3 }}"
+      - "{{ outputs.select_all.rows[1].name == 'alpha' }}"
+      - "{{ outputs.select_all.rows[1].status == 'updated' }}"
+      - "{{ outputs.select_alpha_store.size == 1 }}"
+      - "{{ fromIon(read(outputs.select_alpha_store.uri), allRows=true) | length == 1 }}"
+      - "{{ fromIon(read(outputs.select_alpha_store.uri), allRows=true)[0].name == 'alpha' }}"
+      - "{{ fromIon(read(outputs.select_alpha_store.uri), allRows=true)[0].tags[1] == 'updated' }}"
+      - "{{ outputs.delete_beta.size == 0 }}"
+      - "{{ outputs.select_remaining.size == 1 }}"
+      - "{{ outputs.select_remaining.rows[0].name == 'alpha' }}"
+      - "{{ outputs.select_remaining.rows[0].status == 'updated' }}"
+
+finally:
+  - id: purge
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
+
+  - id: docker_stop
+    type: io.kestra.plugin.docker.Stop
+    containerId: "{{ outputs.docker_start.taskRunner.containerId }}"
+    kill: true
