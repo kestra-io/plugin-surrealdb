@@ -25,6 +25,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import reactor.core.publisher.Flux;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -64,12 +65,15 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 
     @NotNull
     @Builder.Default
+    @PluginProperty(group = "processing")
     protected Property<FetchType> fetchType = Property.ofValue(FetchType.STORE);
 
     @Builder.Default
+    @PluginProperty(group = "main")
     protected Property<Map<String, String>> parameters = Property.ofValue(new HashMap<>());
 
     @NotBlank
+    @PluginProperty(group = "main")
     protected String query;
 
     @Override

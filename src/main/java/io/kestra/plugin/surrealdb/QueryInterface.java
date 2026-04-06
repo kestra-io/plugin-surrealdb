@@ -17,6 +17,7 @@ public interface QueryInterface {
         description = "Controls how query results are returned. `FETCH_ONE` outputs the first row, `FETCH` outputs all rows, `STORE` writes rows to internal storage, `NONE` skips output creation."
     )
     @NotNull
+    @PluginProperty(group = "main")
     Property<FetchType> getFetchType();
 
     @Schema(
@@ -28,12 +29,13 @@ public interface QueryInterface {
             Map.class
         }
     )
+    @PluginProperty(group = "advanced")
     Property<Map<String, String>> getParameters();
 
     @Schema(
         title = "SurrealQL query text"
     )
-    @PluginProperty(dynamic = true)
+    @PluginProperty(dynamic = true, group = "processing")
     @NotBlank
     String getQuery();
 }
