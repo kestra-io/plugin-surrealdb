@@ -26,6 +26,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -111,6 +112,7 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
         description = "Time between query executions; default 1 minute."
     )
     @Builder.Default
+    @PluginProperty(group = "execution")
     protected final Duration interval = Duration.ofMinutes(1);
 
     @Override
