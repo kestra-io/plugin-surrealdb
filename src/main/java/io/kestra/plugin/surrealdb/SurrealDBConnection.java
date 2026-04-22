@@ -9,6 +9,7 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 
+import io.kestra.core.models.annotations.PluginProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
@@ -31,8 +32,10 @@ public abstract class SurrealDBConnection extends Task implements SurrealDBConne
     @NotBlank
     private String host;
 
+    @PluginProperty(secret = true)
     private Property<String> username;
 
+    @PluginProperty(secret = true)
     private Property<String> password;
 
     @NotBlank
