@@ -42,13 +42,13 @@ public interface SurrealDBConnectionInterface {
     @Schema(
         title = "Plaintext authentication username"
     )
-    @PluginProperty(group = "connection")
+    @PluginProperty(secret = true, group = "connection")
     Property<String> getUsername();
 
     @Schema(
         title = "Plaintext authentication password"
     )
-    @PluginProperty(group = "connection")
+    @PluginProperty(secret = true, group = "connection")
     Property<String> getPassword();
 
     @Schema(
