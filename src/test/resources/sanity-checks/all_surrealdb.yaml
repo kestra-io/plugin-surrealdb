@@ -28,7 +28,7 @@ tasks:
     retry:
       type: constant
       interval: PT3S
-      maxAttempt: 20
+      maxAttempts: 20
 
   - id: create_alpha
     type: io.kestra.plugin.surrealdb.Query
