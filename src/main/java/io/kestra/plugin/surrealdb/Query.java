@@ -52,7 +52,7 @@ import io.kestra.core.models.annotations.PluginProperty;
                     host: localhost
                     port: 8000
                     username: surreal_user
-                    password: surreal_passwd
+                    password: "{{ secret('SURREALDB_PASSWORD') }}"
                     database: surreal_db
                     namespace: surreal_namespace
                     query: SELECT * FROM SURREAL_TABLE

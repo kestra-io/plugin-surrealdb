@@ -1,5 +1,6 @@
 package io.kestra.plugin.surrealdb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.surrealdb.connection.SurrealConnection;
 import com.surrealdb.connection.SurrealWebSocketConnection;
 import com.surrealdb.driver.SyncSurrealDriver;
@@ -45,6 +46,7 @@ public abstract class SurrealDBConnection extends Task implements SurrealDBConne
     @Builder.Default
     private int connectionTimeout = 60;
 
+    @JsonIgnore
     private SurrealConnection connection;
 
     protected SyncSurrealDriver connect(RunContext runContext) throws IllegalVariableEvaluationException {
