@@ -32,8 +32,10 @@ public abstract class SurrealDBConnection extends Task implements SurrealDBConne
     @NotBlank
     private String host;
 
+    @ToString.Exclude
     private Property<String> username;
 
+    @ToString.Exclude
     private Property<String> password;
 
     @NotBlank

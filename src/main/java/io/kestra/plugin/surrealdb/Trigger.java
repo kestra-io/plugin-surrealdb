@@ -83,8 +83,10 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @NotBlank
     private String host;
 
+    @ToString.Exclude
     private Property<String> username;
 
+    @ToString.Exclude
     private Property<String> password;
 
     @NotBlank
