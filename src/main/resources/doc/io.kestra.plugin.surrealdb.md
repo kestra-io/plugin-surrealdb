@@ -4,7 +4,7 @@ Run SurrealQL queries and poll for results in SurrealDB from Kestra flows.
 
 ## Authentication
 
-Set `host` to your SurrealDB server hostname and `port` (default `8000`). Set `namespace` and `database` to scope the connection. For authenticated access, set `username` and `password`. Set `useTls: true` for TLS connections. Store secrets in [secrets](https://kestra.io/docs/concepts/secret) and apply connection properties globally with [plugin defaults](https://kestra.io/docs/workflow-components/plugin-defaults).
+Set `host` to your SurrealDB server hostname and `port` (default `8000`). Set `namespace` and `database` to scope the connection. For authenticated access, set `username` and `password`. Set `useTls: true` for TLS connections. Store secrets in [secrets](https://kestra.io/docs/concepts/secret) and set connection properties on each task.
 
 ## Tasks
 
