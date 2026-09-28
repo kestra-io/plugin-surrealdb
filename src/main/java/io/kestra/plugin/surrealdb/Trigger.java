@@ -4,11 +4,17 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
 import io.kestra.core.models.executions.ExecutionTrigger;
@@ -26,7 +32,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -117,13 +122,22 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @PluginProperty(group = "execution")
     protected final Duration interval = Duration.ofMinutes(1);
 
+    @Getter(AccessLevel.NONE)
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @Builder.Default
+    private transient AtomicReference<CompletableFuture<?>> activeQuery = new AtomicReference<>();
+
     @Override
     public Optional<Execution> evaluate(ConditionContext conditionContext, TriggerContext context) throws Exception {
         RunContext runContext = conditionContext.getRunContext();
         Logger logger = runContext.logger();
 
-        Query.Output queryOutput = Query.builder()
+        Query queryTask = Query.builder()
             .host(host)
+            .port(port)
+            .useTls(useTls)
             .namespace(namespace)
             .database(database)
             .query(query)
@@ -131,7 +145,26 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             .fetchType(fetchType)
             .password(password)
             .username(username)
-            .build().run(runContext);
+            .connectionTimeout(connectionTimeout)
+            .build();
+
+        AtomicReference<CompletableFuture<?>> submitted = new AtomicReference<>();
+        final Query.Output queryOutput;
+        try {
+            queryOutput = queryTask.run(runContext, future ->
+            {
+                submitted.set(future);
+                activeQuery.set(future);
+            });
+        } catch (CancellationException e) {
+            logger.debug("SurrealDB polling query for trigger '{}' was cancelled", id);
+            return Optional.empty();
+        } finally {
+            CompletableFuture<?> future = submitted.get();
+            if (future != null) {
+                clearActiveQuery(future);
+            }
+        }
 
         logger.debug("Found '{}' rows from '{}'", queryOutput.getSize(), runContext.render(this.query));
 
@@ -150,6 +183,31 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             .build();
 
         return Optional.of(execution);
+    }
+
+    @Override
+    public void kill() {
+        CompletableFuture<?> future = activeQuery.get();
+        if (future != null) {
+            future.cancel(true);
+        }
+    }
+
+    void clearActiveQuery(CompletableFuture<?> future) {
+        activeQuery.compareAndSet(future, null);
+    }
+
+    /**
+     * Returns the reference holding the currently in-flight query future.
+     *
+     * <p>
+     * Package-private for tests only: it lets integration tests wait
+     * deterministically until a poll has reached the in-flight query stage
+     * before killing it, and verify cleanup afterwards, without exposing
+     * internal cancellation state in the public API.
+     */
+    AtomicReference<CompletableFuture<?>> activeQueryReference() {
+        return activeQuery;
     }
 
 }

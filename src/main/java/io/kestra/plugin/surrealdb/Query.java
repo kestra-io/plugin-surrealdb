@@ -6,13 +6,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import com.surrealdb.connection.SurrealWebSocketConnection;
+import com.surrealdb.connection.exception.SurrealException;
+import com.surrealdb.driver.AsyncSurrealDriver;
 import com.surrealdb.driver.SyncSurrealDriver;
 import com.surrealdb.driver.model.QueryResult;
 
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
+import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.common.FetchType;
@@ -25,7 +32,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import reactor.core.publisher.Flux;
-import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -78,28 +84,79 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 
     @Override
     public Query.Output run(RunContext runContext) throws Exception {
-        SyncSurrealDriver driver = super.connect(runContext);
+        return run(runContext, future ->
+        {
+        });
+    }
 
-        String renderedQuery = runContext.render(query);
-
-        Map<String, String> parametersValue = runContext.render(parameters).asMap(String.class, String.class).isEmpty() ? new HashMap<>()
-            : runContext.render(parameters).asMap(String.class, String.class);
-        List<QueryResult<Object>> results = driver.query(renderedQuery, parametersValue, Object.class);
-
-        Query.Output.OutputBuilder outputBuilder = Output.builder().size(
-            results.stream()
-                .mapToLong(result -> result.getResult() != null ? (long) result.getResult().size() : (long) 0)
-                .sum()
+    /**
+     * Executes the SurrealQL query, publishing the in-flight query future to
+     * {@code onSubmit} immediately after it is obtained and before blocking
+     * on its result, so callers such as the polling trigger can cancel a
+     * blocked evaluation from another thread via {@code future.cancel(true)}.
+     * Cancelling the future unblocks the waiting thread locally; it does not
+     * cancel the server-side query, which driver 0.1.0 does not support.
+     */
+    public Query.Output run(RunContext runContext, Consumer<CompletableFuture<?>> onSubmit) throws Exception {
+        SurrealWebSocketConnection connection = new SurrealWebSocketConnection(
+            runContext.render(getHost()),
+            getPort(),
+            runContext.render(getUseTls()).as(Boolean.class).orElseThrow()
         );
+        try {
+            connection.connect(getConnectionTimeout());
 
-        super.disconnect();
+            SyncSurrealDriver setupDriver = new SyncSurrealDriver(connection);
+            if (getUsername() != null && getPassword() != null) {
+                setupDriver.signIn(
+                    runContext.render(getUsername()).as(String.class).orElseThrow(),
+                    runContext.render(getPassword()).as(String.class).orElseThrow()
+                );
+            }
+            setupDriver.use(runContext.render(getNamespace()), runContext.render(getDatabase()));
 
-        return (switch (runContext.render(fetchType).as(FetchType.class).orElseThrow()) {
-            case FETCH -> outputBuilder.rows(getResultStream(results).toList());
-            case FETCH_ONE -> outputBuilder.row(getResultStream(results).findFirst().orElse(null));
-            case STORE -> outputBuilder.uri(getTempFile(runContext, getResultStream(results).toList()));
-            default -> outputBuilder;
-        }).build();
+            String renderedQuery = runContext.render(query);
+
+            Map<String, String> parametersValue = runContext.render(parameters).asMap(String.class, String.class);
+
+            AsyncSurrealDriver driver = new AsyncSurrealDriver(connection);
+            CompletableFuture<List<QueryResult<Object>>> future = driver.query(renderedQuery, parametersValue, Object.class);
+            onSubmit.accept(future);
+            List<QueryResult<Object>> results = getResultSynchronously(future);
+
+            Query.Output.OutputBuilder outputBuilder = Output.builder().size(
+                results.stream()
+                    .mapToLong(result -> result.getResult() != null ? (long) result.getResult().size() : (long) 0)
+                    .sum()
+            );
+
+            return (switch (runContext.render(fetchType).as(FetchType.class).orElseThrow()) {
+                case FETCH -> outputBuilder.rows(getResultStream(results).toList());
+                case FETCH_ONE -> outputBuilder.row(getResultStream(results).findFirst().orElse(null));
+                case STORE -> outputBuilder.uri(getTempFile(runContext, getResultStream(results).toList()));
+                default -> outputBuilder;
+            }).build();
+        } finally {
+            try {
+                connection.close();
+            } catch (RuntimeException e) {
+                runContext.logger().warn("Failed to close SurrealDB connection", e);
+            }
+        }
+    }
+
+    private static <T> T getResultSynchronously(CompletableFuture<T> completableFuture) {
+        try {
+            return completableFuture.get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof SurrealException) {
+                throw (SurrealException) e.getCause();
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private Stream<Map<String, Object>> getResultStream(List<QueryResult<Object>> results) {
@@ -111,13 +168,9 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
 
     private URI getTempFile(RunContext runContext, List<Map<String, Object>> results) throws IOException {
         File tempFile = runContext.workingDir().createTempFile(".ion").toFile();
-        try (
-            BufferedWriter fileWriter = new BufferedWriter(new FileWriter(tempFile));
-            var output = new BufferedWriter(new FileWriter(tempFile), FileSerde.BUFFER_SIZE)
-        ) {
+        try (var output = new BufferedWriter(new FileWriter(tempFile), FileSerde.BUFFER_SIZE)) {
             var flux = Flux.fromIterable(results);
             FileSerde.writeAll(output, flux).block();
-            fileWriter.flush();
         }
 
         return runContext.storage().putFile(tempFile);
