@@ -171,7 +171,7 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             return Optional.empty();
         }
 
-        Execution execution = TriggerService.generateExecution(this, conditionContext, context, queryOutput);
+        var execution = TriggerService.generateExecution(this, conditionContext, context, queryOutput);
 
         return Optional.of(execution);
     }

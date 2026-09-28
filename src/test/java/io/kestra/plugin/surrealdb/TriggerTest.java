@@ -1,6 +1,5 @@
 package io.kestra.plugin.surrealdb;
 
-import java.net.URL;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.Map;
@@ -62,13 +61,13 @@ public class TriggerTest extends SurrealDBTest {
 
     @Test
     void generatedExecutionCarriesFlowContext() throws Exception {
-        Flow flow = loadFlow("flows/surrealdb-listen.yml").toBuilder().revision(3).build();
-        AbstractTrigger trigger = flow.getTriggers().stream()
+        var flow = loadFlow("flows/surrealdb-listen.yml").toBuilder().revision(3).build();
+        var trigger = flow.getTriggers().stream()
             .filter(t -> t.getId().equals("watch"))
             .findFirst()
             .orElseThrow();
 
-        Execution execution = evaluate(trigger, flow).orElseThrow();
+        var execution = evaluate(trigger, flow).orElseThrow();
 
         assertThat(execution.getId(), is(notNullValue()));
         assertThat(execution.getId(), not(is("watch")));
@@ -79,21 +78,21 @@ public class TriggerTest extends SurrealDBTest {
 
     @Test
     void distinctExecutionIdsAcrossEvaluations() throws Exception {
-        Flow flow = loadFlow("flows/surrealdb-listen.yml");
-        AbstractTrigger trigger = flow.getTriggers().stream()
+        var flow = loadFlow("flows/surrealdb-listen.yml");
+        var trigger = flow.getTriggers().stream()
             .filter(t -> t.getId().equals("watch"))
             .findFirst()
             .orElseThrow();
 
-        Execution first = evaluate(trigger, flow).orElseThrow();
-        Execution second = evaluate(trigger, flow).orElseThrow();
+        var first = evaluate(trigger, flow).orElseThrow();
+        var second = evaluate(trigger, flow).orElseThrow();
 
         assertThat(first.getId(), not(is(second.getId())));
     }
 
     private Flow loadFlow(String path) throws Exception {
-        URL url = getClass().getClassLoader().getResource(path);
-        Flow flow = YamlParser.parse(Paths.get(url.toURI()).toFile(), Flow.class);
+        var url = getClass().getClassLoader().getResource(path);
+        var flow = YamlParser.parse(Paths.get(url.toURI()).toFile(), Flow.class);
         if (flow.getTenantId() == null) {
             flow = flow.toBuilder().tenantId(MAIN_TENANT).build();
         }
@@ -101,7 +100,7 @@ public class TriggerTest extends SurrealDBTest {
     }
 
     private Optional<Execution> evaluate(AbstractTrigger trigger, Flow flow) throws Exception {
-        TriggerContext triggerContext = TriggerContext.builder()
+        var triggerContext = TriggerContext.builder()
             .namespace(flow.getNamespace())
             .flowId(flow.getId())
             .triggerId(trigger.getId())
@@ -109,10 +108,12 @@ public class TriggerTest extends SurrealDBTest {
             .tenantId(flow.getTenantId())
             .build();
 
-        ConditionContext conditionContext = ConditionContext.builder()
-            .runContext(runContextInitializer.forScheduler(
-                (DefaultRunContext) runContextFactory.of(flow, trigger), triggerContext, trigger
-            ))
+        var conditionContext = ConditionContext.builder()
+            .runContext(
+                runContextInitializer.forScheduler(
+                    (DefaultRunContext) runContextFactory.of(flow, trigger), triggerContext, trigger
+                )
+            )
             .flow(flow)
             .build();
 
