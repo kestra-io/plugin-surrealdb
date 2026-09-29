@@ -17,13 +17,12 @@ import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
-import io.kestra.core.models.executions.ExecutionTrigger;
-import io.kestra.core.models.flows.State;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.common.FetchType;
 import io.kestra.core.models.triggers.AbstractTrigger;
 import io.kestra.core.models.triggers.PollingTriggerInterface;
 import io.kestra.core.models.triggers.TriggerContext;
+import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -172,15 +171,7 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
             return Optional.empty();
         }
 
-        ExecutionTrigger executionTrigger = ExecutionTrigger.of(this, queryOutput);
-
-        Execution execution = Execution.builder()
-            .id(id)
-            .namespace(context.getNamespace())
-            .flowId(context.getFlowId())
-            .state(new State())
-            .trigger(executionTrigger)
-            .build();
+        var execution = TriggerService.generateExecution(this, conditionContext, context, queryOutput);
 
         return Optional.of(execution);
     }
