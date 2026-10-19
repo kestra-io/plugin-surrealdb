@@ -10,6 +10,8 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
@@ -26,7 +28,7 @@ public abstract class SurrealDBConnection extends Task implements SurrealDBConne
     private Property<Boolean> useTls = Property.ofValue(false);
 
     @Builder.Default
-    private Property<@Positive Integer> port = Property.ofValue(8000);
+    private Property<@Min(1) @Max(65535) Integer> port = Property.ofValue(DEFAULT_PORT);
 
     @NotBlank
     private String host;
@@ -52,7 +54,7 @@ public abstract class SurrealDBConnection extends Task implements SurrealDBConne
 
     protected SyncSurrealDriver connect(RunContext runContext) throws IllegalVariableEvaluationException {
         SurrealWebSocketConnection connection = new SurrealWebSocketConnection(
-            runContext.render(host), runContext.render(port).as(Integer.class).orElse(8000), runContext.render(useTls).as(Boolean.class).orElseThrow()
+            runContext.render(host), runContext.render(port).as(Integer.class).orElse(DEFAULT_PORT), runContext.render(useTls).as(Boolean.class).orElseThrow()
         );
         connection.connect(connectionTimeout);
 

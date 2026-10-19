@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.common.FetchType;
@@ -21,11 +22,15 @@ import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.serializers.YamlParser;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
+import io.kestra.core.utils.IdUtils;
+import io.kestra.core.utils.TestsUtils;
 
 import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @KestraTest
 public class QueryTest extends SurrealDBTest {
@@ -39,10 +44,10 @@ public class QueryTest extends SurrealDBTest {
     @ParameterizedTest
     @ValueSource(strings = { "", "port: 8000", "port: \"{{ inputs.port }}\"" })
     void queryWithPortFromYaml(String port) throws Exception {
-        RunContext runContext = runContextFactory.of(Map.of("inputs", Map.of("port", "8000")));
-        Query query = YamlParser.parse(
+        var runContext = runContextFactory.of(Map.of("inputs", Map.of("port", "8000")));
+        var query = YamlParser.parse(
             """
-                id: query
+                id: %s
                 type: io.kestra.plugin.surrealdb.Query
                 host: 127.0.0.1
                 %s
@@ -52,13 +57,47 @@ public class QueryTest extends SurrealDBTest {
                 database: some-database
                 fetchType: FETCH_ONE
                 query: "RETURN [{ source: 'port_test' }]"
-                """.formatted(port), Query.class
+                """.formatted(IdUtils.create(), port), Query.class
         );
 
-        Query.Output output = query.run(runContext);
+        var output = query.run(runContext);
 
         assertThat(output.getSize(), is(1L));
         assertThat(output.getRow().get("source"), is("port_test"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "0", "-1", "65536", "70000" })
+    void queryRejectsPortOutsideRange(String port) throws Exception {
+        var query = portFromInput();
+        var runContext = TestsUtils.mockRunContext(runContextFactory, query, Map.of("port", port));
+
+        assertThrows(ConstraintViolationException.class, () -> query.run(runContext));
+    }
+
+    @Test
+    void queryRejectsPortThatIsNotANumber() throws Exception {
+        var query = portFromInput();
+        var runContext = TestsUtils.mockRunContext(runContextFactory, query, Map.of("port", "abc"));
+
+        assertThrows(IllegalVariableEvaluationException.class, () -> query.run(runContext));
+    }
+
+    private Query portFromInput() {
+        return YamlParser.parse(
+            """
+                id: %s
+                type: io.kestra.plugin.surrealdb.Query
+                host: 127.0.0.1
+                port: "{{ inputs.port }}"
+                username: Administrator
+                password: password
+                namespace: some-namespace
+                database: some-database
+                fetchType: FETCH_ONE
+                query: "RETURN [{ source: 'port_test' }]"
+                """.formatted(IdUtils.create()), Query.class
+        );
     }
 
     @Test

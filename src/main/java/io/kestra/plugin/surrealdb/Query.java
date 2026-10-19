@@ -100,7 +100,7 @@ public class Query extends SurrealDBConnection implements RunnableTask<Query.Out
     public Query.Output run(RunContext runContext, Consumer<CompletableFuture<?>> onSubmit) throws Exception {
         SurrealWebSocketConnection connection = new SurrealWebSocketConnection(
             runContext.render(getHost()),
-            runContext.render(getPort()).as(Integer.class).orElse(8000),
+            runContext.render(getPort()).as(Integer.class).orElse(DEFAULT_PORT),
             runContext.render(getUseTls()).as(Boolean.class).orElseThrow()
         );
         try {

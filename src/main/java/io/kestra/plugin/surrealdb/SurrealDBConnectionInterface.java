@@ -4,10 +4,13 @@ import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
 public interface SurrealDBConnectionInterface {
+    int DEFAULT_PORT = 8000;
 
     @Schema(
         title = "Enable TLS for connection",
@@ -26,10 +29,10 @@ public interface SurrealDBConnectionInterface {
 
     @Schema(
         title = "Connection port",
-        description = "Positive TCP port for the SurrealDB endpoint; default is 8000. Accepts a literal or a template expression."
+        description = "TCP port of the SurrealDB endpoint, from 1 to 65535; default `8000`."
     )
     @PluginProperty(group = "connection")
-    Property<@Positive Integer> getPort();
+    Property<@Min(1) @Max(65535) Integer> getPort();
 
     @Schema(
         title = "Connection host"

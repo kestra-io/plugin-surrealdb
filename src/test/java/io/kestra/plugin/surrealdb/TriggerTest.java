@@ -26,6 +26,7 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.runners.RunContextInitializer;
 import io.kestra.core.serializers.YamlParser;
+import io.kestra.core.utils.IdUtils;
 
 import jakarta.inject.Inject;
 
@@ -50,9 +51,9 @@ public class TriggerTest extends SurrealDBTest {
     @ParameterizedTest
     @ValueSource(strings = { "", "port: 8000", "port: \"{{ vars.port }}\"" })
     void triggerWithPortFromYaml(String port) throws Exception {
-        Flow flow = YamlParser.parse(
+        var flow = YamlParser.parse(
             """
-                id: surrealdb-port
+                id: %s
                 namespace: io.kestra.tests
                 variables:
                   port: "8000"
@@ -71,10 +72,10 @@ public class TriggerTest extends SurrealDBTest {
                     database: some-database
                     fetchType: FETCH_ONE
                     query: "RETURN [{ source: 'port_test' }]"
-                """.formatted(port), Flow.class
+                """.formatted(IdUtils.create(), port), Flow.class
         ).toBuilder().tenantId(MAIN_TENANT).build();
 
-        Execution execution = evaluate(flow.getTriggers().getFirst(), flow).orElseThrow();
+        var execution = evaluate(flow.getTriggers().getFirst(), flow).orElseThrow();
 
         assertThat(execution.getTrigger().getVariables().get("size"), is(1L));
         assertThat((Map<String, Object>) execution.getTrigger().getVariables().get("row"), hasEntry("source", "port_test"));
