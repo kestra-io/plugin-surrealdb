@@ -10,6 +10,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
@@ -17,6 +18,7 @@ import io.kestra.core.models.tasks.common.FetchType;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.core.serializers.YamlParser;
 import io.kestra.core.storages.StorageInterface;
 import io.kestra.core.tenant.TenantService;
 
@@ -33,6 +35,31 @@ public class QueryTest extends SurrealDBTest {
 
     @Inject
     private StorageInterface storageInterface;
+
+    @ParameterizedTest
+    @ValueSource(strings = { "", "port: 8000", "port: \"{{ inputs.port }}\"" })
+    void queryWithPortFromYaml(String port) throws Exception {
+        RunContext runContext = runContextFactory.of(Map.of("inputs", Map.of("port", "8000")));
+        Query query = YamlParser.parse(
+            """
+                id: query
+                type: io.kestra.plugin.surrealdb.Query
+                host: 127.0.0.1
+                %s
+                username: Administrator
+                password: password
+                namespace: some-namespace
+                database: some-database
+                fetchType: FETCH_ONE
+                query: "RETURN [{ source: 'port_test' }]"
+                """.formatted(port), Query.class
+        );
+
+        Query.Output output = query.run(runContext);
+
+        assertThat(output.getSize(), is(1L));
+        assertThat(output.getRow().get("source"), is("port_test"));
+    }
 
     @Test
     void simpleQuery_AllTypesParsed() throws Exception {

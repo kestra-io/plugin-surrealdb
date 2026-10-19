@@ -26,11 +26,10 @@ public interface SurrealDBConnectionInterface {
 
     @Schema(
         title = "Connection port",
-        description = "TCP port for the SurrealDB endpoint; default is 8000."
+        description = "Positive TCP port for the SurrealDB endpoint; default is 8000. Accepts a literal or a template expression."
     )
     @PluginProperty(group = "connection")
-    @Positive
-    int getPort();
+    Property<@Positive Integer> getPort();
 
     @Schema(
         title = "Connection host"

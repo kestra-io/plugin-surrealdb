@@ -80,9 +80,8 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @Builder.Default
     private Property<Boolean> useTls = Property.ofValue(false);
 
-    @Positive
     @Builder.Default
-    private int port = 8000;
+    private Property<@Positive Integer> port = Property.ofValue(8000);
 
     @NotBlank
     private String host;
