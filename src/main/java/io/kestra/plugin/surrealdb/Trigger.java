@@ -26,6 +26,8 @@ import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -80,9 +82,8 @@ public class Trigger extends AbstractTrigger implements PollingTriggerInterface,
     @Builder.Default
     private Property<Boolean> useTls = Property.ofValue(false);
 
-    @Positive
     @Builder.Default
-    private int port = 8000;
+    private Property<@Min(1) @Max(65535) Integer> port = Property.ofValue(DEFAULT_PORT);
 
     @NotBlank
     private String host;
