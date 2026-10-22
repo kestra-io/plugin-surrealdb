@@ -18,12 +18,12 @@ tasks:
       - "--pass={{ vars.password }}"
       - memory
     portBindings:
-      - "8000:8000"
+      - "18000:8000"
     wait: false
 
   - id: healthcheck
     type: io.kestra.plugin.core.http.Request
-    uri: "http://localhost:8000/health"
+    uri: "http://localhost:18000/health"
     method: GET
     retry:
       type: constant
@@ -33,7 +33,7 @@ tasks:
   - id: create_alpha
     type: io.kestra.plugin.surrealdb.Query
     host: localhost
-    port: 8000
+    port: 18000
     username: "{{ vars.username }}"
     password: "{{ vars.password }}"
     namespace: "{{ vars.namespace }}"
@@ -54,7 +54,7 @@ tasks:
   - id: create_beta
     type: io.kestra.plugin.surrealdb.Query
     host: localhost
-    port: 8000
+    port: 18000
     username: "{{ vars.username }}"
     password: "{{ vars.password }}"
     namespace: "{{ vars.namespace }}"
@@ -75,7 +75,7 @@ tasks:
   - id: update_alpha
     type: io.kestra.plugin.surrealdb.Query
     host: localhost
-    port: 8000
+    port: 18000
     username: "{{ vars.username }}"
     password: "{{ vars.password }}"
     namespace: "{{ vars.namespace }}"
@@ -95,7 +95,7 @@ tasks:
   - id: select_all
     type: io.kestra.plugin.surrealdb.Query
     host: localhost
-    port: 8000
+    port: 18000
     username: "{{ vars.username }}"
     password: "{{ vars.password }}"
     namespace: "{{ vars.namespace }}"
@@ -109,7 +109,7 @@ tasks:
   - id: select_alpha_store
     type: io.kestra.plugin.surrealdb.Query
     host: localhost
-    port: 8000
+    port: 18000
     username: "{{ vars.username }}"
     password: "{{ vars.password }}"
     namespace: "{{ vars.namespace }}"
@@ -122,7 +122,7 @@ tasks:
   - id: delete_beta
     type: io.kestra.plugin.surrealdb.Query
     host: localhost
-    port: 8000
+    port: 18000
     username: "{{ vars.username }}"
     password: "{{ vars.password }}"
     namespace: "{{ vars.namespace }}"
@@ -134,7 +134,7 @@ tasks:
   - id: select_remaining
     type: io.kestra.plugin.surrealdb.Query
     host: localhost
-    port: 8000
+    port: 18000
     username: "{{ vars.username }}"
     password: "{{ vars.password }}"
     namespace: "{{ vars.namespace }}"
