@@ -34,6 +34,7 @@ import static io.kestra.core.tenant.TenantService.MAIN_TENANT;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -182,5 +183,36 @@ public class TriggerTest extends SurrealDBTest {
 
         Executable evaluate = () -> trigger.evaluate(conditionContext, triggerContext);
         assertThrows(Exception.class, evaluate);
+    }
+
+    @Test
+    void triggerWithNonListStatement() throws Exception {
+        var flow = YamlParser.parse(
+            """
+                id: %s
+                namespace: io.kestra.tests
+                tasks:
+                  - id: end
+                    type: io.kestra.plugin.core.debug.Return
+                    format: done
+                triggers:
+                  - id: watch
+                    type: io.kestra.plugin.surrealdb.Trigger
+                    host: 127.0.0.1
+                    username: Administrator
+                    password: password
+                    namespace: some-namespace
+                    database: some-database
+                    fetchType: FETCH_ONE
+                    query: "INFO FOR DB"
+                """.formatted(IdUtils.create()), Flow.class
+        ).toBuilder().tenantId(MAIN_TENANT).build();
+
+        var execution = evaluate(flow.getTriggers().getFirst(), flow).orElseThrow();
+
+        assertThat(execution.getTrigger().getVariables().get("size"), is(1L));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> row = (Map<String, Object>) execution.getTrigger().getVariables().get("row");
+        assertThat(row, hasKey("tables"));
     }
 }

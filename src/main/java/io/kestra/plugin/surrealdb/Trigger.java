@@ -41,7 +41,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Schema(
     title = "Trigger Flow when SurrealDB query returns rows",
-    description = "Polls a SurrealQL query on a fixed interval (default 1 minute) and starts the Flow when it returns at least one row. Defaults to `fetchType: STORE`, which uploads results to internal storage; use `FETCH` or `FETCH_ONE` to surface rows on `trigger`. TLS is disabled by default; keep credentials in secrets."
+    description = "Polls a SurrealQL query on a fixed interval (default 1 minute) and starts the Flow when it returns at least one row. Supports non-array query results (objects and scalars). Defaults to `fetchType: STORE`, which uploads results to internal storage; use `FETCH` or `FETCH_ONE` to surface rows on `trigger`. TLS is disabled by default; keep credentials in secrets."
 )
 @Plugin(
     examples = {

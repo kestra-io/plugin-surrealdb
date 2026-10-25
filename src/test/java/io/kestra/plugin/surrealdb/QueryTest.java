@@ -12,6 +12,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.surrealdb.connection.exception.SurrealException;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
@@ -426,6 +428,274 @@ public class QueryTest extends SurrealDBTest {
 
         assertThat(queryDelete.getRow(), nullValue());
         assertThat(queryDelete.getRows(), nullValue());
+    }
+
+    @Test
+    void nonListQuery_ReturnScalar() throws Exception {
+        RunContext runContext = runContextFactory.of();
+
+        // FETCH
+        Query queryFetch = authentifiedQueryBuilder()
+            .query("RETURN 1")
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build();
+        Query.Output outputFetch = queryFetch.run(runContext);
+        assertThat(outputFetch.getSize(), is(1L));
+        assertThat(outputFetch.getRows(), hasSize(1));
+        assertThat(outputFetch.getRows().get(0).get("result"), is(1.0));
+
+        // FETCH_ONE
+        Query queryFetchOne = authentifiedQueryBuilder()
+            .query("RETURN 1")
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build();
+        Query.Output outputFetchOne = queryFetchOne.run(runContext);
+        assertThat(outputFetchOne.getSize(), is(1L));
+        assertThat(outputFetchOne.getRow().get("result"), is(1.0));
+
+        // STORE
+        Query queryStore = authentifiedQueryBuilder()
+            .query("RETURN 1")
+            .fetchType(Property.ofValue(FetchType.STORE))
+            .build();
+        Query.Output outputStore = queryStore.run(runContext);
+        assertThat(outputStore.getSize(), is(1L));
+        String outputFileContent = IOUtils.toString(storageInterface.get(TenantService.MAIN_TENANT, null, outputStore.getUri()), Charsets.UTF_8);
+        Map<?, ?> storedRow = JacksonMapper.ofIon().readValue(outputFileContent, Map.class);
+        assertThat(((Number) storedRow.get("result")).doubleValue(), is(1.0));
+    }
+
+    @Test
+    void nonListQuery_ReturnObject() throws Exception {
+        RunContext runContext = runContextFactory.of();
+
+        // FETCH
+        Query queryFetch = authentifiedQueryBuilder()
+            .query("RETURN {a: 1}")
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build();
+        Query.Output outputFetch = queryFetch.run(runContext);
+        assertThat(outputFetch.getSize(), is(1L));
+        assertThat(outputFetch.getRows(), hasSize(1));
+        assertThat(outputFetch.getRows().get(0).get("a"), is(1.0));
+
+        // FETCH_ONE
+        Query queryFetchOne = authentifiedQueryBuilder()
+            .query("RETURN {a: 1}")
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build();
+        Query.Output outputFetchOne = queryFetchOne.run(runContext);
+        assertThat(outputFetchOne.getSize(), is(1L));
+        assertThat(outputFetchOne.getRow().get("a"), is(1.0));
+
+        // STORE
+        Query queryStore = authentifiedQueryBuilder()
+            .query("RETURN {a: 1}")
+            .fetchType(Property.ofValue(FetchType.STORE))
+            .build();
+        Query.Output outputStore = queryStore.run(runContext);
+        assertThat(outputStore.getSize(), is(1L));
+        String outputFileContent = IOUtils.toString(storageInterface.get(TenantService.MAIN_TENANT, null, outputStore.getUri()), Charsets.UTF_8);
+        Map<?, ?> storedRow = JacksonMapper.ofIon().readValue(outputFileContent, Map.class);
+        assertThat(((Number) storedRow.get("a")).doubleValue(), is(1.0));
+    }
+
+    @Test
+    void nonListQuery_InfoForDb() throws Exception {
+        RunContext runContext = runContextFactory.of();
+
+        // FETCH
+        Query queryFetch = authentifiedQueryBuilder()
+            .query("INFO FOR DB")
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build();
+        Query.Output outputFetch = queryFetch.run(runContext);
+        assertThat(outputFetch.getSize(), is(1L));
+        assertThat(outputFetch.getRows(), hasSize(1));
+        assertThat(outputFetch.getRows().get(0), hasKey("tables"));
+
+        // FETCH_ONE
+        Query queryFetchOne = authentifiedQueryBuilder()
+            .query("INFO FOR DB")
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build();
+        Query.Output outputFetchOne = queryFetchOne.run(runContext);
+        assertThat(outputFetchOne.getSize(), is(1L));
+        assertThat(outputFetchOne.getRow(), hasKey("tables"));
+
+        // STORE
+        Query queryStore = authentifiedQueryBuilder()
+            .query("INFO FOR DB")
+            .fetchType(Property.ofValue(FetchType.STORE))
+            .build();
+        Query.Output outputStore = queryStore.run(runContext);
+        assertThat(outputStore.getSize(), is(1L));
+        String outputFileContent = IOUtils.toString(storageInterface.get(TenantService.MAIN_TENANT, null, outputStore.getUri()), Charsets.UTF_8);
+        Map<?, ?> storedRow = JacksonMapper.ofIon().readValue(outputFileContent, Map.class);
+        assertThat(storedRow, hasKey("tables"));
+    }
+
+    @Test
+    void nonListQuery_InfoForTable() throws Exception {
+        RunContext runContext = runContextFactory.of();
+        String table = "table_info_" + UUID.randomUUID().toString().toLowerCase().replace("-", "");
+
+        authentifiedQueryBuilder()
+            .query("DEFINE TABLE %s SCHEMAFULL".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build().run(runContext);
+
+        // FETCH
+        Query queryFetch = authentifiedQueryBuilder()
+            .query("INFO FOR TABLE %s".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build();
+        Query.Output outputFetch = queryFetch.run(runContext);
+        assertThat(outputFetch.getSize(), is(1L));
+        assertThat(outputFetch.getRows(), hasSize(1));
+        assertThat(outputFetch.getRows().get(0), hasKey("fields"));
+
+        // FETCH_ONE
+        Query queryFetchOne = authentifiedQueryBuilder()
+            .query("INFO FOR TABLE %s".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build();
+        Query.Output outputFetchOne = queryFetchOne.run(runContext);
+        assertThat(outputFetchOne.getSize(), is(1L));
+        assertThat(outputFetchOne.getRow(), hasKey("fields"));
+
+        // STORE
+        Query queryStore = authentifiedQueryBuilder()
+            .query("INFO FOR TABLE %s".formatted(table))
+            .fetchType(Property.ofValue(FetchType.STORE))
+            .build();
+        Query.Output outputStore = queryStore.run(runContext);
+        assertThat(outputStore.getSize(), is(1L));
+        String outputFileContent = IOUtils.toString(storageInterface.get(TenantService.MAIN_TENANT, null, outputStore.getUri()), Charsets.UTF_8);
+        Map<?, ?> storedRow = JacksonMapper.ofIon().readValue(outputFileContent, Map.class);
+        assertThat(storedRow, hasKey("fields"));
+    }
+
+    @Test
+    void multiStatement_MixSelectAndInfoFor() throws Exception {
+        RunContext runContext = runContextFactory.of();
+        String table = "table_mix_" + UUID.randomUUID().toString().toLowerCase().replace("-", "");
+
+        authentifiedQueryBuilder()
+            .query("CREATE %s:1 SET name='first'; CREATE %s:2 SET name='second';".formatted(table, table))
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build().run(runContext);
+
+        Query query = authentifiedQueryBuilder()
+            .query("SELECT * FROM %s; INFO FOR DB;".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build();
+        Query.Output output = query.run(runContext);
+
+        assertThat(output.getSize(), is(3L));
+        assertThat(output.getRows(), hasSize(3));
+        assertThat(output.getRows().get(0).get("name"), is("first"));
+        assertThat(output.getRows().get(1).get("name"), is("second"));
+        assertThat(output.getRows().get(2), hasKey("tables"));
+    }
+
+    @Test
+    void regression_SelectAndDefineTable() throws Exception {
+        RunContext runContext = runContextFactory.of();
+        String table = "table_reg_" + UUID.randomUUID().toString().toLowerCase().replace("-", "");
+
+        Query.Output defineOutput = authentifiedQueryBuilder()
+            .query("DEFINE TABLE %s SCHEMAFULL; DEFINE FIELD name ON %s TYPE string;".formatted(table, table))
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build().run(runContext);
+        assertThat(defineOutput.getSize(), is(0L));
+        assertThat(defineOutput.getRow(), nullValue());
+        assertThat(defineOutput.getRows(), nullValue());
+
+        Query.Output selectEmpty = authentifiedQueryBuilder()
+            .query("SELECT * FROM %s".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build().run(runContext);
+        assertThat(selectEmpty.getSize(), is(0L));
+        assertThat(selectEmpty.getRows(), hasSize(0));
+
+        authentifiedQueryBuilder()
+            .query("CREATE %s:1 SET name='sample'".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build().run(runContext);
+
+        Query.Output selectPopulated = authentifiedQueryBuilder()
+            .query("SELECT * FROM %s".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build().run(runContext);
+        assertThat(selectPopulated.getSize(), is(1L));
+        assertThat(selectPopulated.getRow().get("name"), is("sample"));
+    }
+
+    @Test
+    void edgeCases_EmptyNullNestedAndSelectValue() throws Exception {
+        RunContext runContext = runContextFactory.of();
+
+        // RETURN [] -> 0 rows
+        Query.Output returnEmptyArray = authentifiedQueryBuilder()
+            .query("RETURN []")
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build().run(runContext);
+        assertThat(returnEmptyArray.getSize(), is(0L));
+        assertThat(returnEmptyArray.getRows(), hasSize(0));
+
+        // RETURN NONE -> 0 rows
+        Query.Output returnNone = authentifiedQueryBuilder()
+            .query("RETURN NONE")
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build().run(runContext);
+        assertThat(returnNone.getSize(), is(0L));
+        assertThat(returnNone.getRow(), nullValue());
+
+        // RETURN NULL -> 0 rows
+        Query.Output returnNull = authentifiedQueryBuilder()
+            .query("RETURN NULL")
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build().run(runContext);
+        assertThat(returnNull.getSize(), is(0L));
+        assertThat(returnNull.getRows(), hasSize(0));
+
+        // Nested arrays -> passed through without wrapping
+        Query.Output returnNested = authentifiedQueryBuilder()
+            .query("RETURN [[1, 2], [3, 4]]")
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build().run(runContext);
+        assertThat(returnNested.getSize(), is(2L));
+        assertThat(returnNested.getRows(), hasSize(2));
+        List<?> firstNested = (List<?>) (Object) returnNested.getRows().get(0);
+        assertThat(firstNested, contains(1.0, 2.0));
+
+        // SELECT VALUE -> passed through without wrapping
+        String table = "table_sv_" + UUID.randomUUID().toString().toLowerCase().replace("-", "");
+        authentifiedQueryBuilder()
+            .query("CREATE %s:1 SET c_string='val1'".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH_ONE))
+            .build().run(runContext);
+
+        Query.Output selectValue = authentifiedQueryBuilder()
+            .query("SELECT VALUE c_string FROM %s".formatted(table))
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build().run(runContext);
+        assertThat(selectValue.getSize(), is(1L));
+        assertThat((Object) selectValue.getRows().get(0), is("val1"));
+    }
+
+    @Test
+    void query_ErrorStatusThrowsSurrealException() {
+        RunContext runContext = runContextFactory.of();
+
+        Query query = authentifiedQueryBuilder()
+            .query("THROW 'custom error message';")
+            .fetchType(Property.ofValue(FetchType.FETCH))
+            .build();
+
+        SurrealException exception = assertThrows(SurrealException.class, () -> query.run(runContext));
+        assertThat(exception.getMessage(), containsString("custom error message"));
     }
 
     private static Map<Object, Object> toMap(List<Object> list) {
